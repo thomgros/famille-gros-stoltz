@@ -6,14 +6,14 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 import type { Household } from "./types";
-import { runSeed } from "./seed";
+import { LATEST_SEED, runSeed } from "./seed";
 
 const LOCAL_KEY = "fgs.household.v1";
 
 export const DEFAULT_HOUSEHOLD: Household = {
   id: "local",
   name: "Famille Gros-Stoltz",
-  dueDate: "2027-06-25",
+  dueDate: "2027-07-03",
   city: "Paris 18e",
 };
 
@@ -87,11 +87,18 @@ async function loadRemote(session: Session): Promise<State> {
   ]);
   if (e1) throw e1;
   if (e2) throw e2;
-  await runSeed(h.id, h.seed_version);
+  let row = h;
+  if (h.seed_version < LATEST_SEED) {
+    await runSeed(h.id, h.seed_version);
+    // Le seed peut avoir corrigé le foyer (date du terme) : on le relit.
+    const { data: fresh, error: e3 } = await sb.from("households").select("*").eq("id", h.id).single<HouseholdRow>();
+    if (e3) throw e3;
+    row = fresh;
+  }
   return {
     phase: "ready",
     session,
-    household: fromRow(h),
+    household: fromRow(row),
     membership: {
       member: mine.member as MemberName,
       inviteCode: h.invite_code,

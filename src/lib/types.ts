@@ -27,6 +27,7 @@ export interface Milestone {
   date?: string; // ISO
   endDate?: string; // ISO, pour une période (ex. fenêtre d'échographie)
   relativeTo?: RelativeDate; // remplace date si présent
+  endRelativeTo?: RelativeDate; // remplace endDate si présent
   description?: string;
   approximate?: boolean; // « fin mars », « vers déc. »
 }
@@ -43,7 +44,10 @@ export interface Appointment {
   id: string;
   title: string;
   kind: AppointmentKind;
-  start: string; // ISO date + heure
+  start: string; // "2026-12-10T14:30" (heure locale), ou "2026-12-10" si toute la journée
+  end?: string;
+  allDay?: boolean;
+  alert?: "none" | "15m" | "1h" | "1d" | "2d";
   location?: string;
   practitioner?: string;
   notes?: string;

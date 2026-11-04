@@ -5,6 +5,35 @@ import { fetusWeek, formatSize, formatWeight } from "../data/fetus";
 import { addDays, diffDays, formatDay, formatMonth, formatRange, pregnancyStatus, saAt, today } from "../lib/dates";
 import { datedMilestones, useMilestones } from "../lib/milestones";
 import { useHousehold } from "../lib/store";
+import { useSearchParams } from "react-router-dom";
+import { Calendrier } from "../components/Calendrier";
+
+type View = "semaine" | "calendrier" | "frise";
+const VIEWS: { value: View; label: string }[] = [
+  { value: "semaine", label: "Semaine" },
+  { value: "calendrier", label: "Calendrier" },
+  { value: "frise", label: "Frise" },
+];
+
+/** Contrôle segmenté façon iOS. */
+function Segmented({ value, onChange }: { value: View; onChange: (v: View) => void }) {
+  return (
+    <div className="grid grid-cols-3 gap-0.5 rounded-[10px] bg-surface-2 p-0.5 text-[14px] font-medium" role="tablist">
+      {VIEWS.map((v) => (
+        <button
+          key={v.value}
+          type="button"
+          role="tab"
+          aria-selected={value === v.value}
+          onClick={() => onChange(v.value)}
+          className={`rounded-[8px] py-1.5 ${value === v.value ? "bg-surface shadow-sm" : "text-muted"}`}
+        >
+          {v.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function Grossesse() {
   const { household } = useHousehold();
@@ -14,9 +43,16 @@ export function Grossesse() {
   const [sa, setSa] = useState(currentSa);
   const w = fetusWeek(sa);
   const weekStart = addDays(p.ddr, sa * 7);
+  const [params, setParams] = useSearchParams();
+  const view = (params.get("vue") as View | null) ?? "semaine";
+  const setView = (v: View) => setParams(v === "semaine" ? {} : { vue: v }, { replace: true });
 
   return (
     <Page title="Grossesse" subtitle={`Aujourd'hui : ${p.sa} SA + ${p.saDays} j · ${p.sg} SG`}>
+      <Segmented value={view} onChange={setView} />
+      {view === "calendrier" && <Calendrier />}
+      {view === "frise" && <Timeline dueDate={household.dueDate} now={now} />}
+      {view === "semaine" && (
       <Card>
         <div className="flex items-center justify-between">
           <button
@@ -66,7 +102,7 @@ export function Grossesse() {
         <p className="mt-3 text-xs text-muted">Moyennes indicatives. Taille tête-fesses jusqu'à 20 SA, puis tête-talons. L'échographie fait foi.</p>
       </Card>
 
-      <Timeline dueDate={household.dueDate} now={now} />
+      )}
     </Page>
   );
 }
@@ -158,7 +194,7 @@ function Timeline({ dueDate, now }: { dueDate: string; now: Date }) {
           ))}
         </ol>
       </Card>
-      <p className="mt-2 px-1 text-xs text-muted">Dates médicales : repères habituels en France, à confirmer avec la sage-femme ou le gynécologue. Les rendez-vous arrivent à l'étape 4.</p>
+      <p className="mt-2 px-1 text-xs text-muted">Dates médicales : repères habituels en France, à confirmer avec la sage-femme ou le gynécologue. Vos rendez-vous sont dans l'onglet Calendrier.</p>
     </div>
   );
 }

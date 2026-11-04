@@ -11,7 +11,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.households (
   id uuid primary key default gen_random_uuid(),
   name text not null default 'Famille Gros-Stoltz',
-  due_date date not null default '2027-06-25',
+  due_date date not null default '2027-07-03',
   city text default 'Paris 18e',
   invite_code text not null unique default upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 6)),
   seed_version int not null default 0,

@@ -19,7 +19,7 @@ export function Reglages() {
     >
       <Card>
         <label className="block">
-          <span className="text-sm font-semibold">Date du terme</span>
+          <span className="text-sm font-semibold">Date du terme (41 SA, donnée par la gynécologue)</span>
           <input
             type="date"
             value={household.dueDate}
@@ -29,11 +29,11 @@ export function Reglages() {
         </label>
         <dl className="mt-4 space-y-2 text-[15px]">
           <Row label="Début de grossesse (DDR théorique)" value={formatDayYear(p.ddr)} />
-          <Row label="Terme à 41 SA (convention française)" value={formatDayYear(p.dueFr41)} />
+          <Row label="Conception" value={formatDayYear(p.conception)} />
+          <Row label="40 SA (convention internationale)" value={formatDayYear(p.due40)} />
         </dl>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Toutes les semaines et les jalons sont calculés depuis cette date. Mettez celle donnée par la 1re échographie. Selon la
-          maternité, le terme est posé à 40 SA ou à 41 SA.
+          Toutes les semaines, les échographies et les congés sont calculés depuis cette date. Si la 1re échographie la corrige, changez-la ici.
         </p>
         {household.dueDate !== DEFAULT_HOUSEHOLD.dueDate && (
           <button
@@ -41,7 +41,7 @@ export function Reglages() {
             onClick={() => update({ dueDate: DEFAULT_HOUSEHOLD.dueDate })}
             className="mt-3 text-sm font-medium text-accent"
           >
-            Revenir au {formatDayYear(new Date(2027, 5, 25))}
+            Revenir au {formatDayYear(new Date(2027, 6, 3))}
           </button>
         )}
       </Card>

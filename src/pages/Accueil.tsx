@@ -5,6 +5,7 @@ import { fetusWeek, formatSize, formatWeight } from "../data/fetus";
 import { diffDays, formatLong, formatRange, plural, pregnancyStatus, today } from "../lib/dates";
 import { upcomingMilestones, useMilestones } from "../lib/milestones";
 import { useHousehold } from "../lib/store";
+import { appointmentStart, formatTime, kindLabel, sortAppointments, useAppointments } from "../lib/appointments";
 
 export function Accueil() {
   const { household } = useHousehold();
@@ -13,6 +14,8 @@ export function Accueil() {
   const w = fetusWeek(p.sa);
   const { docs: milestones } = useMilestones();
   const next = upcomingMilestones(milestones, household.dueDate, now, 4);
+  const { docs: appointments } = useAppointments();
+  const nextRdv = sortAppointments(appointments).find((a) => appointmentStart(a) >= now);
 
   return (
     <Page
@@ -62,8 +65,29 @@ export function Accueil() {
         <p className="mt-2 text-sm text-muted tabular">{Math.round(p.progress * 100)} % du chemin parcouru</p>
       </Card>
 
+      {nextRdv && (
+        <div>
+          <SectionTitle to="/grossesse?vue=calendrier">Prochain rendez-vous</SectionTitle>
+          <Link to="/grossesse?vue=calendrier">
+            <Card className="flex items-center gap-3">
+              <span className="w-1 self-stretch rounded-full" style={{ background: "var(--k-medical)" }} />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{nextRdv.title}</p>
+                <p className="text-sm text-muted">
+                  {[kindLabel(nextRdv.kind), nextRdv.location].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium first-letter:uppercase">{formatLong(appointmentStart(nextRdv))}</p>
+                {!nextRdv.allDay && <p className="tabular text-sm text-muted">{formatTime(nextRdv.start)}</p>}
+              </div>
+            </Card>
+          </Link>
+        </div>
+      )}
+
       <div>
-        <SectionTitle to="/grossesse">À venir</SectionTitle>
+        <SectionTitle to="/grossesse?vue=frise">À venir</SectionTitle>
         <Card className="divide-y divide-line p-0">
           {next.map((m) => {
             const inDays = diffDays(m.start, now);

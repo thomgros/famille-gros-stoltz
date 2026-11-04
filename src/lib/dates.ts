@@ -1,8 +1,6 @@
-// Tout dérive d'une seule valeur : la date de terme saisie par le foyer.
-// DDR théorique = terme − 280 jours (convention de la spec : 25 juin 2027 → 18 sept. 2026,
-// ce qui correspond bien à une fécondation le 2 oct. 2026).
-// En France, le terme « officiel » est souvent posé à 41 SA (DDR + 287 j) : on l'affiche
-// à titre d'information, sans rien recalculer dessus.
+// Tout dérive d'une seule valeur : la date de terme donnée par la gynécologue.
+// Convention française : terme = 41 SA = DDR théorique + 287 jours = conception + 273 jours.
+// Exemple : terme le 3 juil. 2027 → DDR le 19 sept. 2026 → conception le 3 oct. 2026.
 
 import type { Milestone, RelativeDate } from "./types";
 
@@ -39,7 +37,7 @@ export function today(): Date {
   return new Date(n.getFullYear(), n.getMonth(), n.getDate());
 }
 
-export const PREGNANCY_DAYS = 280;
+export const PREGNANCY_DAYS = 287; // 41 SA
 
 export function ddrFromDueDate(dueDate: string): Date {
   return addDays(parseISO(dueDate), -PREGNANCY_DAYS);
@@ -48,7 +46,8 @@ export function ddrFromDueDate(dueDate: string): Date {
 export interface PregnancyStatus {
   ddr: Date;
   due: Date;
-  dueFr41: Date; // DDR + 41 SA, convention française fréquente
+  due40: Date; // DDR + 40 SA, convention internationale
+  conception: Date;
   daysSinceDdr: number;
   sa: number; // semaines d'aménorrhée révolues
   saDays: number; // jours en plus
@@ -74,7 +73,8 @@ export function pregnancyStatus(dueDate: string, on: Date = today()): PregnancyS
   return {
     ddr,
     due,
-    dueFr41: addDays(ddr, 287),
+    due40: addDays(ddr, 280),
+    conception: addDays(ddr, 14),
     daysSinceDdr,
     sa,
     saDays,
@@ -103,6 +103,7 @@ export function milestoneStart(m: Milestone, dueDate: string): Date | undefined 
 }
 
 export function milestoneEnd(m: Milestone, dueDate: string): Date | undefined {
+  if (m.endRelativeTo) return resolveRelative(m.endRelativeTo, dueDate);
   return m.endDate ? parseISO(m.endDate) : milestoneStart(m, dueDate);
 }
 
