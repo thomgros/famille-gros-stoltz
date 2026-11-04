@@ -7,6 +7,7 @@ import { supabase } from "./supabase";
 import milestones from "../../seed/milestones.json";
 import tasks from "../../seed/tasks.json";
 import items from "../../seed/items.json";
+import comparisons from "../../seed/comparisons.json";
 
 type Doc = { id: string };
 
@@ -40,6 +41,8 @@ export const SEED_STEPS: SeedStep[] = [
   { version: 7, patch: { tasks: { "t14-decider-des-dates-du-conge-de-": { notes: "Indemnisation à vérifier selon le statut (Julia artiste-auteur, Thomas intermittent)." } } } },
   // Statuts : Julia artiste-auteur, Thomas intermittent.
   { version: 8, collections: { tasks: (tasks as Doc[]).filter((t) => ["t39-droits-maternite-artiste-auteur", "t40-droits-paternite-intermittent"].includes(t.id)) } },
+  // Les 10 comparatifs du projet.
+  { version: 9, collections: { comparisons } },
 ];
 
 export const LATEST_SEED = Math.max(...SEED_STEPS.map((s) => s.version));
@@ -90,4 +93,4 @@ export async function runSeed(householdId: string, currentVersion: number) {
 }
 
 /** Données de départ en mode local (sans Supabase) : le seed final, déjà à jour. */
-export const LOCAL_SEED: Record<string, Doc[]> = { milestones, tasks, items };
+export const LOCAL_SEED: Record<string, Doc[]> = { milestones, tasks, items, comparisons };

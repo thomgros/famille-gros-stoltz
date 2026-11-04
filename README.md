@@ -8,7 +8,7 @@ App web mobile (PWA, à installer sur l'iPhone) pour que Thomas et Julia prépar
 - [x] Étape 2 : Supabase (connexion par lien magique, foyer partagé, temps réel)
 - [x] Étape 3 : To-do et Achats
 - [x] Étape 4 : Calendrier et rendez-vous
-- [ ] Étape 5 : Comparatifs
+- [x] Étape 5 : Comparatifs
 - [ ] Étape 6 : Chat
 - [x] Étape 7 : Mise en ligne (https://famille-gros-stoltz.vercel.app)
 

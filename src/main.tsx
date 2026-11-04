@@ -7,7 +7,8 @@ import { TabBar } from "./components/TabBar";
 import { Accueil } from "./pages/Accueil";
 import { Grossesse } from "./pages/Grossesse";
 import { Reglages } from "./pages/Reglages";
-import { Chat, Comparatifs } from "./pages/Bientot";
+import { Chat } from "./pages/Bientot";
+import { Comparatif, Comparatifs } from "./pages/Comparatifs";
 import { Listes } from "./pages/Listes";
 import { Chargement, Connexion, Foyer } from "./pages/Connexion";
 
@@ -23,6 +24,7 @@ function App() {
         <Route path="/grossesse" element={<Grossesse />} />
         <Route path="/listes" element={<Listes />} />
         <Route path="/comparatifs" element={<Comparatifs />} />
+        <Route path="/comparatifs/:id" element={<Comparatif />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/reglages" element={<Reglages />} />
         <Route path="*" element={<Accueil />} />

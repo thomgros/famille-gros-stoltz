@@ -91,9 +91,12 @@ export interface Item {
 export interface Product {
   id: string;
   name: string;
-  role: "reco" | "alternative" | "ecarte";
+  role: "reco" | "alternative" | "autre" | "ecarte";
+  tag?: string; // « Petit budget », « Vidéo, le moins émetteur »…
   priceMin?: number;
   priceMax?: number;
+  priceUnit?: string; // « / mois », « / 800 g »
+  priceLabel?: string; // quand il n'y a pas de prix : « Abonnement »
   pros: string[];
   cons: string[];
   specs?: Record<string, string>;
@@ -102,13 +105,21 @@ export interface Product {
 export interface Comparison {
   id: string;
   title: string;
+  emoji?: string;
   status: "a_decider" | "choisi" | "achete";
+  statusNote?: string;
+  intro?: string;
   criteria: string[];
   options: Product[];
   chosenProductId?: string;
   buyWindow?: string;
   sourceUrl?: string;
+  tips?: string[];
   notes?: string;
+  /** false pour un comparatif qui ne s'achète pas (mode de garde). */
+  shoppable?: boolean;
+  itemPriority?: "P1" | "P2" | "P3";
+  itemCategory?: string;
 }
 
 export interface ChatMessage {

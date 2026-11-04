@@ -4,13 +4,35 @@ import type { MilestoneKind } from "../lib/types";
 
 export type Tone = "butter" | "lavender" | "mint" | "peach" | "sky" | "rose";
 
-export function Page({ title, subtitle, action, tone = "butter", children }: { title: string; subtitle?: string; action?: ReactNode; tone?: Tone; children: ReactNode }) {
+export function Page({
+  title,
+  subtitle,
+  back,
+  action,
+  tone = "butter",
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  back?: { to: string; label: string };
+  action?: ReactNode;
+  tone?: Tone;
+  children: ReactNode;
+}) {
   return (
     <div className={`tone-${tone} relative isolate min-h-dvh`}>
       <div className="page-band absolute inset-x-0 top-0 -z-10 h-80" aria-hidden />
       <div className="mx-auto max-w-xl px-4 pt-safe pb-28">
         <header className="flex items-end justify-between gap-3 pb-4 pt-2">
           <div className="min-w-0">
+            {back && (
+              <Link to={back.to} className="-ml-1 inline-flex items-center gap-0.5 py-1 text-[15px] font-medium text-tone-strong">
+                <span className="text-xl leading-none" aria-hidden>
+                  ‹
+                </span>
+                {back.label}
+              </Link>
+            )}
             {subtitle && <p className="text-sm font-medium text-tone-strong">{subtitle}</p>}
             <h1 className="text-[28px] font-bold leading-tight tracking-tight">{title}</h1>
           </div>
