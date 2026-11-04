@@ -54,7 +54,9 @@ Deno.serve(async (req) => {
 
   // Seuls les membres d'un foyer peuvent utiliser le chat.
   const auth = req.headers.get("Authorization") ?? "";
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: auth } } });
+  // Clé publique du projet : celle de l'environnement, sinon celle envoyée par l'app (nouveau système « publishable »).
+  const publicKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || req.headers.get("apikey") || "";
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, publicKey, { global: { headers: { Authorization: auth } } });
   const { data: userData } = await sb.auth.getUser();
   if (!userData.user) return json({ error: "Non connecté" }, 401);
   const { data: member } = await sb.from("household_members").select("household_id").eq("user_id", userData.user.id).maybeSingle();
