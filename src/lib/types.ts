@@ -120,6 +120,9 @@ export interface Comparison {
   shoppable?: boolean;
   itemPriority?: "P1" | "P2" | "P3";
   itemCategory?: string;
+  /** Comparatif préparé par l'IA : date et pages web consultées. */
+  generatedAt?: string;
+  webSources?: { title: string; url: string }[];
 }
 
 export interface ChatMessage {

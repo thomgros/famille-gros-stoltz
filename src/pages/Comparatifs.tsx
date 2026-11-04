@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatDayYear } from "../lib/dates";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Card, Page } from "../components/ui";
 import { Chip, Segmented } from "../components/sheet";
@@ -179,6 +180,11 @@ export function Comparatif() {
       <Segmented value={status} onChange={setStatus} options={STATUS.map((s) => ({ value: s.value, label: s.label }))} />
 
       <Card tint>
+        {comp.generatedAt && (
+          <p className="mb-2 inline-flex rounded-full bg-white/70 px-2.5 py-1 text-[12px] font-medium text-tone-strong">
+            ✨ Préparé par l'IA le {formatDayYear(new Date(comp.generatedAt))} · prix et labels à vérifier
+          </p>
+        )}
         {comp.statusNote && <p className="text-[15px]">{comp.statusNote}</p>}
         {chosen && (
           <p className={`${comp.statusNote ? "mt-2" : ""} text-[15px]`}>
@@ -261,6 +267,34 @@ export function Comparatif() {
           Voir le comparatif d'origine ↗
         </a>
       )}
+
+      {comp.webSources && comp.webSources.length > 0 && (
+        <div className="px-1">
+          <p className="text-[13px] font-semibold uppercase tracking-wide text-tone-strong">Pages consultées par l'IA</p>
+          <ul className="mt-1 space-y-1 text-sm">
+            {comp.webSources.map((w) => (
+              <li key={w.url}>
+                <a href={w.url} target="_blank" rel="noreferrer" className="text-tone-strong underline decoration-tone-mid underline-offset-2">
+                  {w.title} ↗
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => {
+          if (!window.confirm(`Supprimer le comparatif « ${comp.title} » ? Julia et Thomas ne le verront plus.`)) return;
+          remove(comp.id);
+          if (linked && !linked.purchased) removeItem(linked.id);
+          navigate("/comparatifs");
+        }}
+        className="w-full rounded-2xl bg-surface py-3 text-[15px] text-danger ring-1 ring-line"
+      >
+        🗑 Supprimer ce comparatif…
+      </button>
 
       {editingProduct && (
         <ProduitSheet initial={editingProduct === "new" ? undefined : editingProduct} onClose={() => setEditingProduct(null)} onSave={saveProduct} onDelete={removeProduct} />

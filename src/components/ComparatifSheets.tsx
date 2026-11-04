@@ -1,7 +1,8 @@
 // Feuilles de saisie des comparatifs : un produit (prix, points forts…) et le comparatif lui-même.
 
 import { useState } from "react";
-import { DeleteButton, field, Group, Row, Select, Sheet } from "./sheet";
+import { DeleteButton, field, Group, Row, Segmented, Select, Sheet } from "./sheet";
+import { supabase } from "../lib/supabase";
 import { ROLES } from "../lib/comparisons";
 import { parseEuro } from "../lib/lists";
 import { newId } from "../lib/useCollection";
@@ -79,7 +80,39 @@ export function ProduitSheet({ initial, onClose, onSave, onDelete }: { initial?:
   );
 }
 
+async function generate(sujet: string, precisions: string): Promise<Comparison> {
+  if (!supabase) throw new Error("La création par l'IA fonctionne une fois connecté à votre foyer.");
+  const { data, error } = await supabase.functions.invoke("chat", { body: { mode: "comparatif", sujet, precisions } });
+  if (error || !data) {
+    const ctx = (error as { context?: Response } | null)?.context;
+    let msg = "Pas de connexion, ou le service ne répond pas. Réessayez dans un instant.";
+    if (ctx && typeof ctx.status === "number") {
+      msg = ctx.status === 404 ? "La fonction « chat » n'est pas installée dans Supabase." : `Erreur ${ctx.status}.`;
+      try {
+        const b = await ctx.json();
+        if (b?.error) msg = b.error;
+      } catch {
+        /* corps illisible */
+      }
+    }
+    throw new Error(msg);
+  }
+  return {
+    ...data,
+    id: newId(),
+    status: "a_decider",
+    shoppable: true,
+    generatedAt: new Date().toISOString(),
+    options: (data.options as Omit<Product, "id">[]).map((o) => ({ ...o, id: newId() })),
+  } as Comparison;
+}
+
 export function ComparatifSheet({ initial, onClose, onSave, onDelete }: { initial?: Comparison; onClose: () => void; onSave: (c: Comparison) => void; onDelete: (id: string) => void }) {
+  const [mode, setMode] = useState<"ia" | "main">(initial ? "main" : "ia");
+  const [sujet, setSujet] = useState("");
+  const [precisions, setPrecisions] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [emoji, setEmoji] = useState(initial?.emoji ?? "");
   const [criteria, setCriteria] = useState((initial?.criteria ?? []).join("\n"));
@@ -87,7 +120,20 @@ export function ComparatifSheet({ initial, onClose, onSave, onDelete }: { initia
   const [shoppable, setShoppable] = useState(initial?.shoppable !== false);
   const [confirm, setConfirm] = useState(false);
 
+  async function submitIa() {
+    setBusy(true);
+    setError(null);
+    try {
+      onSave(await generate(sujet.trim(), precisions.trim()));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function submit() {
+    if (mode === "ia") return void submitIa();
     onSave({
       status: "a_decider",
       options: [],
@@ -102,7 +148,51 @@ export function ComparatifSheet({ initial, onClose, onSave, onDelete }: { initia
   }
 
   return (
-    <Sheet title={initial ? "Comparatif" : "Nouveau comparatif"} onCancel={onClose} onDone={submit} doneLabel={initial ? "OK" : "Créer"} canDone={!!title.trim()}>
+    <Sheet
+      title={initial ? "Comparatif" : "Nouveau comparatif"}
+      onCancel={() => !busy && onClose()}
+      onDone={submit}
+      doneLabel={initial ? "OK" : busy ? "…" : "Créer"}
+      canDone={mode === "ia" ? !!sujet.trim() && !busy : !!title.trim()}
+    >
+      {!initial && (
+        <Segmented
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: "ia", label: "✨ Avec l'IA" },
+            { value: "main", label: "À la main" },
+          ]}
+        />
+      )}
+
+      {mode === "ia" && !initial ? (
+        <>
+          <Group footer="L'IA prépare la fiche complète : critères, produit recommandé, alternatives, écartés, prix, conseils. Priorité à la sécurité de bébé et aux matières saines.">
+            <input autoFocus placeholder="Sujet (ex. Chaise haute, siège auto, transat…)" value={sujet} onChange={(e) => setSujet(e.target.value)} className={field} />
+            <textarea
+              placeholder="Précisions (facultatif) : budget, taille de la pièce, marque déjà repérée…"
+              rows={3}
+              value={precisions}
+              onChange={(e) => setPrecisions(e.target.value)}
+              className={`${field} resize-none`}
+            />
+          </Group>
+          {busy && (
+            <div className="rounded-[12px] bg-tone-soft px-4 py-3 text-[15px]">
+              <p className="animate-pulse font-medium text-tone-strong">Recherche des produits et des prix…</p>
+              <p className="mt-1 text-sm text-muted">Cela prend souvent 20 à 60 secondes. Gardez la feuille ouverte.</p>
+            </div>
+          )}
+          {error && (
+            <div className="rounded-[12px] bg-surface px-4 py-3 text-[15px]">
+              <p className="font-semibold text-danger">Pas de comparatif</p>
+              <p className="mt-1">{error}</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
       <Group>
         <input autoFocus={!initial} placeholder="Sujet (ex. Chaise haute)" value={title} onChange={(e) => setTitle(e.target.value)} className={field} />
         <input placeholder="Emoji (facultatif) 🪑" value={emoji} onChange={(e) => setEmoji(e.target.value)} className={field} maxLength={4} />
@@ -123,8 +213,10 @@ export function ComparatifSheet({ initial, onClose, onSave, onDelete }: { initia
           />
         </Row>
       </Group>
+        </>
+      )}
       {initial && (
-        <DeleteButton label="Supprimer le comparatif" confirming={confirm} onAsk={() => setConfirm(true)} onCancel={() => setConfirm(false)} onConfirm={() => onDelete(initial.id)} />
+        <DeleteButton label="🗑 Supprimer ce comparatif" confirming={confirm} onAsk={() => setConfirm(true)} onCancel={() => setConfirm(false)} onConfirm={() => onDelete(initial.id)} />
       )}
     </Sheet>
   );

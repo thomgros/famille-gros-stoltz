@@ -69,12 +69,14 @@ Deno.serve(async (req) => {
   const { data: member } = await sb.from("household_members").select("household_id").eq("user_id", userData.user.id).maybeSingle();
   if (!member) return json({ error: "Réservé aux membres du foyer" }, 403);
 
-  let body: { messages?: Turn[]; sa?: number };
+  let body: { mode?: string; messages?: Turn[]; sa?: number; sujet?: string; precisions?: string };
   try {
     body = await req.json();
   } catch {
     return json({ error: "Requête invalide" }, 400);
   }
+
+  if (body.mode === "comparatif") return await creerComparatif(body.sujet, body.precisions, geminiKey, mistralKey);
   const history = (body.messages ?? [])
     .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
     .slice(-8)
@@ -116,11 +118,23 @@ class ApiError extends Error {
   }
 }
 
+interface GeminiResult {
+  text: string;
+  sources: { title: string; url: string }[];
+}
+
 async function askGemini(key: string, system: string, history: Turn[]): Promise<string> {
+  return (await callGemini(key, system, history, { search: false, maxTokens: 4096 })).text;
+}
+
+/** search : recherche Google pour des informations à jour (prix, disponibilité). */
+async function callGemini(key: string, system: string, history: Turn[], opts: { search: boolean; maxTokens: number }): Promise<GeminiResult> {
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: system }] },
     contents: history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
-    generationConfig: { temperature: 0.2, maxOutputTokens: 4096, responseMimeType: "application/json" },
+    // La recherche Google ne se combine pas avec le mode JSON : on demande alors le JSON dans le texte.
+    ...(opts.search ? { tools: [{ google_search: {} }] } : {}),
+    generationConfig: { temperature: 0.2, maxOutputTokens: opts.maxTokens, ...(opts.search ? {} : { responseMimeType: "application/json" }) },
   });
   let last: ApiError | null = null;
   for (const model of [...new Set(GEMINI_MODELS)]) {
@@ -133,9 +147,15 @@ async function askGemini(key: string, system: string, history: Turn[]): Promise<
       });
       if (r.ok) {
         const data = await r.json();
-        const parts: { text?: string }[] = data?.candidates?.[0]?.content?.parts ?? [];
+        const cand = data?.candidates?.[0];
+        const parts: { text?: string }[] = cand?.content?.parts ?? [];
         const text = parts.map((p) => p.text ?? "").join("");
-        if (text) return text;
+        const chunks: { web?: { uri?: string; title?: string } }[] = cand?.groundingMetadata?.groundingChunks ?? [];
+        const sources = chunks
+          .filter((c) => c.web?.uri)
+          .map((c) => ({ title: String(c.web!.title ?? "source"), url: String(c.web!.uri) }))
+          .slice(0, 8);
+        if (text) return { text, sources };
         last = new ApiError(502, "Gemini n'a pas donné de réponse (question peut-être bloquée par ses filtres).");
         break;
       }
@@ -167,4 +187,123 @@ async function askMistral(key: string, system: string, history: Turn[]): Promise
   if (!r.ok) throw new ApiError(r.status, `Mistral a répondu ${r.status} : ${(await r.text()).slice(0, 200)}`);
   const data = await r.json();
   return data?.choices?.[0]?.message?.content ?? "";
+}
+
+// ---------------------------------------------------------------- Comparatifs générés
+
+const COMPARATIF_SYSTEM = `Tu prépares des comparatifs d'équipement pour bébé pour Thomas et Julia, futurs parents. Le bébé naît début juillet 2027. Ils vivent dans un appartement à Paris 18e, sans voiture (métro, train, taxi, à pied).
+
+Leurs priorités, dans cet ordre :
+1. La sécurité du bébé : normes européennes en vigueur (EN, i-Size, EN 71…), rappels de produits connus, recommandations officielles (couchage, portage…). Écarte tout ce qui n'est pas sûr, et dis pourquoi.
+2. Les matières les plus saines possibles : coton bio GOTS, OEKO-TEX Standard 100, bois massif huilé ou peint à l'eau, verre, inox, silicone platine, sans PVC, sans phtalates, sans BPA, sans retardateurs de flamme, sans parfum, le moins de perturbateurs endocriniens possible. Méfiance envers MDF, aggloméré, contreplaqué, mélamine, « bambou » à la mélamine, vernis solvantés.
+3. La praticité dans un appartement parisien sans voiture, puis la durée d'usage et la revente.
+4. Le prix.
+
+Règles :
+- Produits réellement vendus en France aujourd'hui, prix en euros constatés chez des vendeurs français. Si un prix est incertain, mets la fourchette la plus honnête possible.
+- 5 à 8 produits : 1 « reco » (parfois 2 si deux usages différents), 2 ou 3 « alternative », éventuellement des « autre », et au moins 1 « ecarte » avec la raison dans les points faibles.
+- Points forts et faibles courts et concrets (matière, norme, poids, taille, durée d'usage).
+- Conseils : 3 à 6 phrases utiles (quand acheter, ce qu'il faut vérifier sur l'étiquette, occasion ou pas, sécurité).
+- Ne jamais inventer une certification : écris « à vérifier » si tu n'es pas sûr.
+
+Réponds uniquement avec un objet JSON, sans texte autour :
+{"title": "Sujet court", "emoji": "un emoji", "statusNote": "1 phrase de synthèse : ce qu'on recommande et pourquoi", "intro": "ce qui a été comparé (facultatif)", "criteria": ["5 à 8 critères courts"], "buyWindow": "quand acheter, par ex. « vers 5 mois (déc. 2027) »", "itemCategory": "Sommeil | Change | Toilette et santé | Repas | Vêtements | Sorties et transports | Éveil | Sécurité de l'appartement | Grand équipement", "itemPriority": "P1 (pour la naissance) | P2 (plus tard) | P3 (optionnel)", "options": [{"name": "Marque Modèle", "role": "reco | alternative | autre | ecarte", "tag": "facultatif, ex. Petit budget", "priceMin": 0, "priceMax": 0, "pros": ["…"], "cons": ["…"], "specs": {"Matière": "…", "Norme": "…"}}], "tips": ["…"]}`;
+
+const CATEGORIES = ["Sommeil", "Change", "Toilette et santé", "Repas", "Vêtements", "Sorties et transports", "Éveil", "Sécurité de l'appartement", "Grand équipement"];
+const ROLES = ["reco", "alternative", "autre", "ecarte"];
+
+const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const strList = (v: unknown, n: number, max: number) => (Array.isArray(v) ? v.map((x) => str(x, max)).filter(Boolean).slice(0, n) : []);
+const num = (v: unknown) => {
+  const n = typeof v === "number" ? v : parseFloat(String(v ?? "").replace(/\s/g, "").replace(",", "."));
+  return Number.isFinite(n) && n > 0 && n < 100000 ? Math.round(n * 100) / 100 : undefined;
+};
+
+function extractJson(text: string): unknown {
+  const t = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```$/, "").trim();
+  try {
+    return JSON.parse(t);
+  } catch {
+    const a = t.indexOf("{");
+    const b = t.lastIndexOf("}");
+    if (a !== -1 && b > a) return JSON.parse(t.slice(a, b + 1));
+    throw new Error("JSON introuvable");
+  }
+}
+
+async function creerComparatif(sujetRaw: unknown, precisionsRaw: unknown, geminiKey?: string, mistralKey?: string) {
+  const sujet = str(sujetRaw, 120);
+  const precisions = str(precisionsRaw, 600);
+  if (!sujet) return json({ error: "Indiquez le sujet du comparatif." }, 400);
+
+  const question = `Prépare le comparatif : « ${sujet} ».${precisions ? `\nPrécisions des parents : ${precisions}` : ""}`;
+  const turns: Turn[] = [{ role: "user", content: question }];
+
+  let text = "";
+  let sources: { title: string; url: string }[] = [];
+  try {
+    if (geminiKey) {
+      try {
+        ({ text, sources } = await callGemini(geminiKey, COMPARATIF_SYSTEM, turns, { search: true, maxTokens: 8192 }));
+      } catch (e) {
+        // Recherche Google indisponible (quota, modèle) : on refait sans recherche.
+        const err = e as ApiError;
+        if (err.status === 401 || err.status === 403) throw e;
+        ({ text, sources } = await callGemini(geminiKey, COMPARATIF_SYSTEM, turns, { search: false, maxTokens: 8192 }));
+      }
+    } else {
+      text = await askMistral(mistralKey!, COMPARATIF_SYSTEM, turns);
+    }
+  } catch (e) {
+    const err = e as { message?: string };
+    return json({ error: err.message ?? "Le service d'IA ne répond pas." }, 502);
+  }
+
+  let raw: Record<string, unknown>;
+  try {
+    raw = extractJson(text) as Record<string, unknown>;
+  } catch {
+    return json({ error: "L'IA n'a pas rendu un comparatif lisible. Réessayez." }, 502);
+  }
+
+  const options = (Array.isArray(raw.options) ? raw.options : [])
+    .slice(0, 10)
+    .map((o: Record<string, unknown>) => {
+      const specsIn = o.specs && typeof o.specs === "object" ? (o.specs as Record<string, unknown>) : {};
+      const specs = Object.fromEntries(
+        Object.entries(specsIn)
+          .slice(0, 8)
+          .map(([k, v]) => [str(k, 40), str(String(v ?? ""), 160)])
+          .filter(([k, v]) => k && v),
+      );
+      const priceMin = num(o.priceMin);
+      return {
+        name: str(o.name, 100),
+        role: ROLES.includes(String(o.role)) ? String(o.role) : "autre",
+        tag: str(o.tag, 60) || undefined,
+        priceMin,
+        priceMax: num(o.priceMax) ?? priceMin,
+        pros: strList(o.pros, 6, 200),
+        cons: strList(o.cons, 6, 200),
+        specs: Object.keys(specs).length ? specs : undefined,
+      };
+    })
+    .filter((o) => o.name);
+  if (options.length === 0) return json({ error: "L'IA n'a proposé aucun produit. Précisez le sujet et réessayez." }, 502);
+
+  const category = str(raw.itemCategory, 40);
+  const prio = str(raw.itemPriority, 4).slice(0, 2);
+  return json({
+    title: str(raw.title, 80) || sujet,
+    emoji: str(raw.emoji, 8) || undefined,
+    statusNote: str(raw.statusNote, 400) || undefined,
+    intro: str(raw.intro, 400) || undefined,
+    criteria: strList(raw.criteria, 10, 80),
+    buyWindow: str(raw.buyWindow, 80) || undefined,
+    itemCategory: CATEGORIES.includes(category) ? category : "Grand équipement",
+    itemPriority: ["P1", "P2", "P3"].includes(prio) ? prio : "P1",
+    options,
+    tips: strList(raw.tips, 8, 400),
+    webSources: sources,
+  });
 }
