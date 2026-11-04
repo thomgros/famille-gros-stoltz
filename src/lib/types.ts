@@ -64,6 +64,8 @@ export interface Task {
   relativeTo?: RelativeDate;
   owner: Member;
   status: Status;
+  doneBy?: Member;
+  doneAt?: string;
   notes?: string;
   link?: string;
 }
@@ -82,6 +84,7 @@ export interface Item {
   buyBy?: string;
   purchased: boolean;
   purchasedBy?: Member;
+  purchasedAt?: string;
   comparisonId?: string;
 }
 

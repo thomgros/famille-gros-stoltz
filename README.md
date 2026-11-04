@@ -6,11 +6,11 @@ App web mobile (PWA, à installer sur l'iPhone) pour que Thomas et Julia prépar
 
 - [x] Étape 1 : squelette, navigation, calcul des SA, page Grossesse
 - [x] Étape 2 : Supabase (connexion par lien magique, foyer partagé, temps réel)
-- [ ] Étape 3 : To-do et Achats
-- [ ] Étape 4 : Calendrier et rendez-vous
+- [x] Étape 3 : To-do et Achats
+- [x] Étape 4 : Calendrier et rendez-vous
 - [ ] Étape 5 : Comparatifs
 - [ ] Étape 6 : Chat
-- [ ] Étape 7 : Mise en ligne et installation
+- [x] Étape 7 : Mise en ligne (https://famille-gros-stoltz.vercel.app)
 
 ## Lancer en local
 

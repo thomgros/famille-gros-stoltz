@@ -6,6 +6,8 @@ import { diffDays, formatLong, formatRange, plural, pregnancyStatus, today } fro
 import { upcomingMilestones, useMilestones } from "../lib/milestones";
 import { useHousehold } from "../lib/store";
 import { appointmentStart, formatTime, kindLabel, sortAppointments, useAppointments } from "../lib/appointments";
+import { memberLabel, taskDue, useItems, useTasks } from "../lib/lists";
+import { CheckCircle } from "../components/sheet";
 
 export function Accueil() {
   const { household } = useHousehold();
@@ -16,6 +18,19 @@ export function Accueil() {
   const next = upcomingMilestones(milestones, household.dueDate, now, 4);
   const { docs: appointments } = useAppointments();
   const nextRdv = sortAppointments(appointments).find((a) => appointmentStart(a) >= now);
+  const { membership } = useHousehold();
+  const h = household;
+  const { docs: tasks, save: saveTask } = useTasks();
+  const nextTasks = tasks
+    .filter((t) => t.status !== "done")
+    .map((t) => ({ t, due: taskDue(t, h.dueDate) }))
+    .filter((x): x is { t: typeof x.t; due: Date } => !!x.due)
+    .sort((a, b) => a.due.getTime() - b.due.getTime())
+    .slice(0, 5);
+  const { docs: items } = useItems();
+  const birthItems = items.filter((i) => i.priority === "P1");
+  const boughtBirth = birthItems.filter((i) => i.purchased).length;
+  const bought = items.filter((i) => i.purchased).length;
 
   return (
     <Page
@@ -64,6 +79,52 @@ export function Accueil() {
         </div>
         <p className="mt-2 text-sm text-muted tabular">{Math.round(p.progress * 100)} % du chemin parcouru</p>
       </Card>
+
+      {nextTasks.length > 0 && (
+        <div>
+          <SectionTitle to="/listes">Prochaines tâches</SectionTitle>
+          <Card className="divide-y divide-line p-0">
+            {nextTasks.map(({ t, due }) => {
+              const late = diffDays(due, now) < 0;
+              return (
+                <div key={t.id} className="flex items-start gap-1 py-1 pl-1.5 pr-4">
+                  <CheckCircle
+                    checked={false}
+                    onToggle={() => saveTask({ ...t, status: "done", doneBy: membership?.member, doneAt: new Date().toISOString() })}
+                    label={`Marquer « ${t.title} » comme faite`}
+                  />
+                  <Link to="/listes" className="min-w-0 flex-1 py-2.5">
+                    <p className="leading-snug">{t.title}</p>
+                    <p className={`mt-0.5 text-[13px] ${late ? "font-semibold text-danger" : "text-muted"}`}>
+                      {late ? "En retard · " : ""}
+                      {t.relativeTo && t.dueLabel ? t.dueLabel : formatRange(due)} · {memberLabel(t.owner)}
+                    </p>
+                  </Link>
+                </div>
+              );
+            })}
+          </Card>
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <Link to="/listes?vue=achats" className="block">
+          <Card>
+            <div className="flex items-baseline justify-between">
+              <p className="font-semibold">Achats</p>
+              <p className="tabular text-sm text-muted">
+                {bought} / {items.length}
+              </p>
+            </div>
+            <p className="mt-2 text-sm text-muted tabular">
+              Pour la naissance : {boughtBirth} / {birthItems.length}
+            </p>
+            <div className="mt-2">
+              <ProgressBar value={birthItems.length ? boughtBirth / birthItems.length : 0} label="Achats pour la naissance" />
+            </div>
+          </Card>
+        </Link>
+      )}
 
       {nextRdv && (
         <div>

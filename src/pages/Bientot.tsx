@@ -1,23 +1,5 @@
 import { ComingSoon, Page } from "../components/ui";
 
-export function Listes() {
-  return (
-    <Page title="Listes">
-      <ComingSoon
-        step={3}
-        title="To-do et achats"
-        items={[
-          "Les 41 tâches du projet, par mois, avec priorité, échéance et responsable",
-          "Filtres « en retard », « cette semaine », « ce mois », par catégorie",
-          "Les articles du trousseau : à la naissance, plus tard, optionnel",
-          "Prix prévu, prix payé, lien d'achat, acheté par qui",
-          "Ajouter, modifier, supprimer : Julia et Thomas voient les mêmes cases cochées",
-        ]}
-      />
-    </Page>
-  );
-}
-
 export function Comparatifs() {
   return (
     <Page title="Comparatifs">

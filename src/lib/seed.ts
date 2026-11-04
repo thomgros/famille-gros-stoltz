@@ -5,6 +5,8 @@
 
 import { supabase } from "./supabase";
 import milestones from "../../seed/milestones.json";
+import tasks from "../../seed/tasks.json";
+import items from "../../seed/items.json";
 
 type Doc = { id: string };
 
@@ -27,6 +29,8 @@ export const SEED_STEPS: SeedStep[] = [
   { version: 2, removals: { milestones: ["voyage-usa"] } },
   // Terme donné par la gynécologue : 3 juil. 2027 (41 SA). Échographies calculées depuis la DDR.
   { version: 3, dueDate: { from: "2027-06-25", to: "2027-07-03" }, overwrite: { milestones: byId(["echo-1", "echo-2", "echo-3"]) } },
+  // To-do (38 tâches, sans le voyage) et liste d'achats (64 articles).
+  { version: 4, collections: { tasks, items } },
 ];
 
 export const LATEST_SEED = Math.max(...SEED_STEPS.map((s) => s.version));
@@ -63,4 +67,4 @@ export async function runSeed(householdId: string, currentVersion: number) {
 }
 
 /** Données de départ en mode local (sans Supabase) : le seed final, déjà à jour. */
-export const LOCAL_SEED: Record<string, Doc[]> = { milestones };
+export const LOCAL_SEED: Record<string, Doc[]> = { milestones, tasks, items };

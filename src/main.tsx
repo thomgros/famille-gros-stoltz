@@ -7,7 +7,8 @@ import { TabBar } from "./components/TabBar";
 import { Accueil } from "./pages/Accueil";
 import { Grossesse } from "./pages/Grossesse";
 import { Reglages } from "./pages/Reglages";
-import { Chat, Comparatifs, Listes } from "./pages/Bientot";
+import { Chat, Comparatifs } from "./pages/Bientot";
+import { Listes } from "./pages/Listes";
 import { Chargement, Connexion, Foyer } from "./pages/Connexion";
 
 function App() {
