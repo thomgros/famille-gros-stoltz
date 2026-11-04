@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 import { Card, Page } from "../components/ui";
 import { formatDayYear, pregnancyStatus, toISO } from "../lib/dates";
 import { DEFAULT_HOUSEHOLD, useHousehold } from "../lib/store";
@@ -48,6 +49,8 @@ export function Reglages() {
       </Card>
 
       <Membres />
+
+      <MotDePasse />
 
       <Installer />
 
@@ -123,6 +126,44 @@ function Membres() {
   );
 }
 
+function MotDePasse() {
+  const { membership } = useHousehold();
+  const [pwd, setPwd] = useState("");
+  const [pwd2, setPwd2] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!membership || !supabase) return null;
+  const sb = supabase;
+
+  async function save() {
+    setMsg(null);
+    if (pwd.length < 8) return setMsg({ ok: false, text: "8 caractères minimum." });
+    if (pwd !== pwd2) return setMsg({ ok: false, text: "Les deux mots de passe sont différents." });
+    setBusy(true);
+    const { error } = await sb.auth.updateUser({ password: pwd });
+    setBusy(false);
+    if (error) setMsg({ ok: false, text: error.message });
+    else {
+      setPwd("");
+      setPwd2("");
+      setMsg({ ok: true, text: "Mot de passe enregistré. Dans l'app de l'écran d'accueil, touchez « J'ai un mot de passe »." });
+    }
+  }
+
+  return (
+    <Card tint>
+      <p className="text-sm font-semibold">🔑 Mot de passe</p>
+      <p className="mt-1 text-sm text-muted">Pour vous connecter dans l'app de l'écran d'accueil avec votre e-mail et ce mot de passe.</p>
+      <input type="password" autoComplete="new-password" placeholder="Nouveau mot de passe (8 caractères min.)" value={pwd} onChange={(e) => setPwd(e.target.value)} className="mt-3 block w-full rounded-2xl border border-tone-mid/50 bg-white/75 px-3 py-3 text-base" />
+      <input type="password" autoComplete="new-password" placeholder="Confirmer" value={pwd2} onChange={(e) => setPwd2(e.target.value)} className="mt-2 block w-full rounded-2xl border border-tone-mid/50 bg-white/75 px-3 py-3 text-base" />
+      {msg && <p className={`mt-2 text-sm ${msg.ok ? "text-tone-strong" : "text-danger"}`}>{msg.text}</p>}
+      <button type="button" onClick={() => void save()} disabled={busy || !pwd} className="mt-3 w-full rounded-2xl bg-tone-mid py-3 font-semibold text-ink disabled:opacity-50">
+        {busy ? "Enregistrement…" : "Enregistrer le mot de passe"}
+      </button>
+    </Card>
+  );
+}
+
 function Installer() {
   const standalone =
     window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -134,7 +175,7 @@ function Installer() {
         <li>Dans Safari, touchez le bouton Partager (le carré avec une flèche vers le haut).</li>
         <li>Faites défiler et touchez « Sur l'écran d'accueil ».</li>
         <li>Touchez « Ajouter ».</li>
-        <li>Ouvrez l'app depuis l'icône et connectez-vous avec le code reçu par e-mail.</li>
+        <li>Choisissez d'abord un mot de passe ci-dessus, puis ouvrez l'app depuis l'icône et touchez « J'ai un mot de passe ».</li>
       </ol>
     </Card>
   );

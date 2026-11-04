@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "../lib/supabase";
 import { useHousehold, type MemberName } from "../lib/store";
 import { Card } from "../components/ui";
@@ -24,12 +24,33 @@ export function Connexion() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [code, setCode] = useState("");
+  const [withPassword, setWithPassword] = useState(false);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const inApp = standalone();
+  // Dans l'app de l'écran d'accueil, on propose d'abord le mot de passe.
+  useEffect(() => {
+    if (inApp) setWithPassword(true);
+  }, [inApp]);
+
+  async function submitPassword(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    const { error } = await supabase!.auth.signInWithPassword({ email: email.trim(), password });
+    setBusy(false);
+    if (error)
+      setError(
+        error.message.toLowerCase().includes("invalid")
+          ? "E-mail ou mot de passe incorrect. Pas encore de mot de passe ? Connectez-vous une fois avec le lien dans Safari, puis choisissez-en un dans les Réglages."
+          : error.message,
+      );
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (withPassword) return submitPassword(e);
     setBusy(true);
     setError(null);
     const { error } = await supabase!.auth.signInWithOtp({
@@ -94,11 +115,34 @@ export function Connexion() {
               <span className="text-sm font-semibold">Votre adresse e-mail</span>
               <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
             </label>
-            <p className="mt-2 text-sm text-muted">Pas de mot de passe : vous recevez un code par e-mail pour vous connecter.</p>
+            {withPassword && (
+              <label className="mt-3 block">
+                <span className="text-sm font-semibold">Mot de passe</span>
+                <input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className={input} />
+              </label>
+            )}
+            <p className="mt-2 text-sm text-muted">
+              {withPassword ? "Le mot de passe se choisit dans les Réglages de l'app." : "Vous recevez un e-mail pour vous connecter."}
+            </p>
             {error && <p className="mt-2 text-sm text-danger">{error}</p>}
             <button type="submit" disabled={busy} className={`${button} mt-4`}>
-              {busy ? "Envoi…" : "Recevoir le code"}
+              {busy ? "Un instant…" : withPassword ? "Se connecter" : "Recevoir l'e-mail"}
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setWithPassword((v) => !v);
+                setError(null);
+              }}
+              className="mt-3 w-full text-center text-sm font-medium text-accent"
+            >
+              {withPassword ? "Recevoir un e-mail à la place" : "J'ai un mot de passe"}
+            </button>
+            {inApp && !withPassword && (
+              <p className="mt-3 rounded-2xl bg-surface-2 px-3 py-2 text-[13px] text-muted">
+                Dans l'app de l'écran d'accueil, le lien de l'e-mail s'ouvre dans Safari. Le plus simple : choisissez un mot de passe dans les Réglages depuis Safari, puis touchez « J'ai un mot de passe ».
+              </p>
+            )}
           </form>
         )}
       </Card>
