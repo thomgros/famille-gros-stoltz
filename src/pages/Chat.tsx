@@ -63,6 +63,38 @@ async function explainError(error: unknown): Promise<string> {
   return "Pas de connexion, ou le service ne répond pas. Réessayez dans un instant.";
 }
 
+/** Appui long (ou clic droit) : propose d'effacer le message. */
+function useLongPress(onLong: () => void) {
+  const timer = useRef<number | null>(null);
+  const clear = () => {
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = null;
+  };
+  return {
+    onTouchStart: () => {
+      clear();
+      timer.current = window.setTimeout(onLong, 550);
+    },
+    onTouchEnd: clear,
+    onTouchMove: clear,
+    onContextMenu: (e: React.MouseEvent) => {
+      e.preventDefault();
+      onLong();
+    },
+  };
+}
+
+function Bubble({ onDelete, className, children }: { onDelete: () => void; className: string; children: React.ReactNode }) {
+  const press = useLongPress(() => {
+    if (window.confirm("Effacer ce message ?")) onDelete();
+  });
+  return (
+    <div {...press} className={`${className} select-none [-webkit-touch-callout:none]`}>
+      {children}
+    </div>
+  );
+}
+
 function Conversation() {
   const { household, membership } = useHousehold();
   const me = membership?.member;
@@ -135,25 +167,20 @@ function Conversation() {
       <div className="space-y-3">
         {messages.map((m) =>
           m.author === "assistant" ? (
-            <div key={m.id} className="mr-6 rounded-3xl rounded-tl-lg border border-line bg-surface p-4">
+            <Bubble key={m.id} onDelete={() => remove(m.id)} className="mr-6 rounded-3xl rounded-tl-lg border border-line bg-surface p-4">
               <div className="flex flex-wrap items-center gap-2">
                 {m.verdict && <VerdictBadge v={m.verdict} />}
                 {m.title && <p className="font-semibold">{m.title}</p>}
               </div>
               <p className="mt-1.5 whitespace-pre-line text-[15px] leading-relaxed">{m.content}</p>
               {m.sources && m.sources.length > 0 && <p className="mt-2 text-[12px] text-muted">Sources : {m.sources.join(", ")}</p>}
-            </div>
+            </Bubble>
           ) : (
             <div key={m.id} className="ml-10 flex flex-col items-end">
               <p className="pb-0.5 pr-2 text-[11px] text-muted">{NAMES[m.author as "thomas" | "julia"] ?? ""}</p>
-              <div className="group relative rounded-3xl rounded-tr-lg bg-tone-mid px-4 py-2.5 text-[15px]">
+              <Bubble onDelete={() => remove(m.id)} className="rounded-3xl rounded-tr-lg bg-tone-mid px-4 py-2.5 text-[15px]">
                 {m.content}
-                {m.author === me && (
-                  <button type="button" onClick={() => remove(m.id)} className="absolute -left-7 top-1/2 hidden -translate-y-1/2 text-muted group-hover:block" aria-label="Supprimer la question">
-                    ×
-                  </button>
-                )}
-              </div>
+              </Bubble>
             </div>
           ),
         )}
@@ -172,7 +199,7 @@ function Conversation() {
       </div>
 
       <p className="px-1 text-[12px] leading-snug text-muted">
-        Réponses générées par une IA (Google Gemini) : elles peuvent se tromper. Pour un médicament ou un symptôme, demandez au médecin, à la sage-femme ou au pharmacien. En cas d'urgence : maternité ou 15.
+        Appui long sur un message pour l'effacer. Réponses générées par une IA (Google Gemini) : elles peuvent se tromper. Pour un médicament ou un symptôme, demandez au médecin, à la sage-femme ou au pharmacien. En cas d'urgence : maternité ou 15.
       </p>
 
       <form onSubmit={submit} className="sticky bottom-[84px] z-10 flex items-end gap-2 rounded-3xl border border-tone-mid/60 bg-surface/95 p-1.5 pl-4 shadow-sm backdrop-blur">

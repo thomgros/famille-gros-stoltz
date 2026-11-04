@@ -11,7 +11,14 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2.47.10";
 
-const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-flash-latest";
+// Modèles essayés dans l'ordre : si l'un est surchargé (503) ou saturé (429), on passe au suivant.
+const GEMINI_MODELS = [
+  ...(Deno.env.get("GEMINI_MODEL") ? [Deno.env.get("GEMINI_MODEL")!] : []),
+  "gemini-flash-latest",
+  "gemini-2.5-flash",
+  "gemini-flash-lite-latest",
+  "gemini-2.5-flash-lite",
+];
 const MISTRAL_MODEL = Deno.env.get("MISTRAL_MODEL") ?? "mistral-small-latest";
 
 const cors = {
@@ -82,7 +89,7 @@ Deno.serve(async (req) => {
     text = geminiKey ? await askGemini(geminiKey, system, history) : await askMistral(mistralKey!, system, history);
   } catch (e) {
     const err = e as { status?: number; message?: string };
-    if (err.status === 429) return json({ error: "Trop de questions d'un coup pour l'offre gratuite. Réessayez dans une minute." }, 429);
+    if (err.status === 429 && !geminiKey) return json({ error: "Trop de questions d'un coup. Réessayez dans une minute." }, 429);
     return json({ error: err.message ?? "Le service d'IA ne répond pas." }, 502);
   }
 
@@ -110,21 +117,39 @@ class ApiError extends Error {
 }
 
 async function askGemini(key: string, system: string, history: Turn[]): Promise<string> {
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
-    method: "POST",
-    headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
-      generationConfig: { temperature: 0.2, maxOutputTokens: 4096, responseMimeType: "application/json" },
-    }),
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+    generationConfig: { temperature: 0.2, maxOutputTokens: 4096, responseMimeType: "application/json" },
   });
-  if (!r.ok) throw new ApiError(r.status, `Gemini a répondu ${r.status} : ${(await r.text()).slice(0, 200)}`);
-  const data = await r.json();
-  const parts: { text?: string }[] = data?.candidates?.[0]?.content?.parts ?? [];
-  const text = parts.map((p) => p.text ?? "").join("");
-  if (!text) throw new ApiError(502, "Gemini n'a pas donné de réponse (question peut-être bloquée par ses filtres).");
-  return text;
+  let last: ApiError | null = null;
+  for (const model of [...new Set(GEMINI_MODELS)]) {
+    // Deux essais par modèle, avec une courte pause, avant de passer au suivant.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: "POST",
+        headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
+        body,
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const parts: { text?: string }[] = data?.candidates?.[0]?.content?.parts ?? [];
+        const text = parts.map((p) => p.text ?? "").join("");
+        if (text) return text;
+        last = new ApiError(502, "Gemini n'a pas donné de réponse (question peut-être bloquée par ses filtres).");
+        break;
+      }
+      const detail = (await r.text()).slice(0, 200);
+      last = new ApiError(r.status, `Gemini a répondu ${r.status} : ${detail}`);
+      if (r.status === 404) break; // modèle inconnu : on passe directement au suivant
+      if (r.status !== 503 && r.status !== 429 && r.status !== 500) throw last; // clé refusée, requête invalide…
+      await new Promise((res) => setTimeout(res, 800 * (attempt + 1)));
+    }
+  }
+  if (last && (last.status === 503 || last.status === 429)) {
+    throw new ApiError(503, "Les serveurs gratuits de Google sont saturés en ce moment. Réessayez dans quelques minutes.");
+  }
+  throw last ?? new ApiError(502, "Gemini ne répond pas.");
 }
 
 async function askMistral(key: string, system: string, history: Turn[]): Promise<string> {
