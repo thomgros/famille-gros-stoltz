@@ -1,14 +1,18 @@
-// Fonction Supabase « chat » : pose la question à Mistral avec les consignes de l'app.
+// Fonction Supabase « chat » : pose la question à une IA avec les consignes de l'app.
 //
 // À déployer dans Supabase > Edge Functions > « Deploy a new function » > « Via Editor »,
-// nom : chat. Secret à ajouter (Edge Functions > Secrets) : MISTRAL_API_KEY.
+// nom : chat. Secret à ajouter (Edge Functions > Secrets), l'un ou l'autre :
+//   GEMINI_API_KEY   (Google Gemini, offre gratuite)  ← utilisé en priorité
+//   MISTRAL_API_KEY  (Mistral, offre payante à l'usage)
+// Facultatif : GEMINI_MODEL ou MISTRAL_MODEL pour changer de modèle.
 //
 // Sécurité : Supabase vérifie que l'appel vient d'un utilisateur connecté, puis cette
-// fonction vérifie qu'il fait partie d'un foyer. La clé Mistral ne quitte jamais le serveur.
+// fonction vérifie qu'il fait partie d'un foyer. La clé ne quitte jamais le serveur.
 
 import { createClient } from "npm:@supabase/supabase-js@2.47.10";
 
-const MODEL = Deno.env.get("MISTRAL_MODEL") ?? "mistral-small-latest";
+const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-flash-latest";
+const MISTRAL_MODEL = Deno.env.get("MISTRAL_MODEL") ?? "mistral-small-latest";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -44,8 +48,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "Méthode non autorisée" }, 405);
 
-  const key = Deno.env.get("MISTRAL_API_KEY");
-  if (!key) return json({ error: "La clé Mistral n'est pas configurée (secret MISTRAL_API_KEY)." }, 500);
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  const mistralKey = Deno.env.get("MISTRAL_API_KEY");
+  if (!geminiKey && !mistralKey) return json({ error: "Aucune clé d'IA configurée dans Supabase (secret GEMINI_API_KEY)." }, 500);
 
   // Seuls les membres d'un foyer peuvent utiliser le chat.
   const auth = req.headers.get("Authorization") ?? "";
@@ -69,23 +74,18 @@ Deno.serve(async (req) => {
 
   const context = typeof body.sa === "number" && body.sa >= 0 && body.sa <= 45 ? `\n\nAujourd'hui, Julia est à ${body.sa} semaines d'aménorrhée (SA).` : "";
 
-  const r = await fetch("https://api.mistral.ai/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      temperature: 0.2,
-      max_tokens: 600,
-      response_format: { type: "json_object" },
-      messages: [{ role: "system", content: SYSTEM + context }, ...history],
-    }),
-  });
+  const system = SYSTEM + context;
+  let text: string;
+  try {
+    text = geminiKey ? await askGemini(geminiKey, system, history) : await askMistral(mistralKey!, system, history);
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    if (err.status === 429) return json({ error: "Trop de questions d'un coup pour l'offre gratuite. Réessayez dans une minute." }, 429);
+    return json({ error: err.message ?? "Le service d'IA ne répond pas." }, 502);
+  }
 
-  if (r.status === 429) return json({ error: "Trop de questions d'un coup pour l'offre gratuite de Mistral. Réessayez dans une minute." }, 429);
-  if (!r.ok) return json({ error: `Mistral a répondu ${r.status}`, detail: (await r.text()).slice(0, 300) }, 502);
-
-  const data = await r.json();
-  const text: string = data?.choices?.[0]?.message?.content ?? "";
+  // Certains modèles entourent le JSON de ```json … ``` : on l'extrait.
+  text = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```$/, "").trim();
   try {
     const parsed = JSON.parse(text);
     const verdict = ["ok", "precaution", "eviter", "inconnu"].includes(parsed.verdict) ? parsed.verdict : "inconnu";
@@ -100,3 +100,44 @@ Deno.serve(async (req) => {
     return json({ verdict: "inconnu", titre: "", reponse: text.slice(0, 2000), sources: [] });
   }
 });
+
+class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+async function askGemini(key: string, system: string, history: Turn[]): Promise<string> {
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
+    method: "POST",
+    headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+      generationConfig: { temperature: 0.2, maxOutputTokens: 4096, responseMimeType: "application/json" },
+    }),
+  });
+  if (!r.ok) throw new ApiError(r.status, `Gemini a répondu ${r.status} : ${(await r.text()).slice(0, 200)}`);
+  const data = await r.json();
+  const parts: { text?: string }[] = data?.candidates?.[0]?.content?.parts ?? [];
+  const text = parts.map((p) => p.text ?? "").join("");
+  if (!text) throw new ApiError(502, "Gemini n'a pas donné de réponse (question peut-être bloquée par ses filtres).");
+  return text;
+}
+
+async function askMistral(key: string, system: string, history: Turn[]): Promise<string> {
+  const r = await fetch("https://api.mistral.ai/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MISTRAL_MODEL,
+      temperature: 0.2,
+      max_tokens: 600,
+      response_format: { type: "json_object" },
+      messages: [{ role: "system", content: system }, ...history],
+    }),
+  });
+  if (!r.ok) throw new ApiError(r.status, `Mistral a répondu ${r.status} : ${(await r.text()).slice(0, 200)}`);
+  const data = await r.json();
+  return data?.choices?.[0]?.message?.content ?? "";
+}

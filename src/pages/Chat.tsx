@@ -89,7 +89,7 @@ function Conversation() {
     save(userMsg);
     setText("");
     setBusy(true);
-    // On envoie les derniers échanges pour que Mistral comprenne les questions de suivi.
+    // On envoie les derniers échanges pour que l'IA comprenne les questions de suivi.
     const history = [...messages, userMsg].slice(-8).map((m) => ({
       role: m.author === "assistant" ? ("assistant" as const) : ("user" as const),
       content: m.author === "assistant" ? `${m.title ? m.title + ". " : ""}${m.content}` : m.content,
@@ -172,7 +172,7 @@ function Conversation() {
       </div>
 
       <p className="px-1 text-[12px] leading-snug text-muted">
-        Réponses générées par une IA (Mistral) : elles peuvent se tromper. Pour un médicament ou un symptôme, demandez au médecin, à la sage-femme ou au pharmacien. En cas d'urgence : maternité ou 15.
+        Réponses générées par une IA (Google Gemini) : elles peuvent se tromper. Pour un médicament ou un symptôme, demandez au médecin, à la sage-femme ou au pharmacien. En cas d'urgence : maternité ou 15.
       </p>
 
       <form onSubmit={submit} className="sticky bottom-[84px] z-10 flex items-end gap-2 rounded-3xl border border-tone-mid/60 bg-surface/95 p-1.5 pl-4 shadow-sm backdrop-blur">
