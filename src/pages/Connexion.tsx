@@ -16,11 +16,17 @@ function Shell({ children }: { children: React.ReactNode }) {
 const input = "mt-2 block w-full rounded-2xl border border-line bg-surface-2 px-3 py-3 text-base";
 const button = "w-full rounded-2xl bg-accent-fill py-3.5 font-semibold text-on-accent disabled:opacity-50";
 
+/** L'app est-elle ouverte depuis l'écran d'accueil (et non dans Safari) ? */
+const standalone = () =>
+  window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
 export function Connexion() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const inApp = standalone();
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -35,29 +41,63 @@ export function Connexion() {
     else setSent(true);
   }
 
+  // Le code de l'e-mail permet de se connecter dans l'app de l'écran d'accueil,
+  // qui ne partage pas la connexion de Safari sur iPhone.
+  async function verify(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    const { error } = await supabase!.auth.verifyOtp({ email: email.trim(), token: code.replace(/\s/g, ""), type: "email" });
+    setBusy(false);
+    if (error) setError(error.message.includes("expired") || error.message.includes("invalid") ? "Code incorrect ou expiré. Demandez un nouveau code." : error.message);
+  }
+
   return (
     <Shell>
       <Card>
         {sent ? (
-          <>
+          <form onSubmit={verify}>
             <p className="font-semibold">Regardez vos e-mails</p>
             <p className="mt-2 text-[15px] text-muted">
-              Un lien de connexion a été envoyé à <strong className="text-ink">{email}</strong>. Ouvrez-le sur ce téléphone.
+              Un e-mail a été envoyé à <strong className="text-ink">{email}</strong>. Tapez ici le <strong className="text-ink">code</strong> qu'il contient
+              {inApp ? "." : ", ou touchez le lien (il s'ouvre dans Safari)."}
             </p>
-            <button type="button" onClick={() => setSent(false)} className="mt-4 text-sm font-medium text-accent">
-              Changer d'adresse
+            <label className="mt-4 block">
+              <span className="text-sm font-semibold">Code reçu par e-mail</span>
+              <input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9 ]*"
+                maxLength={10}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className={`${input} text-center text-2xl tracking-[0.4em]`}
+                autoFocus
+              />
+            </label>
+            {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+            <button type="submit" disabled={busy || code.replace(/\s/g, "").length < 6} className={`${button} mt-4`}>
+              {busy ? "Vérification…" : "Se connecter"}
             </button>
-          </>
+            <div className="mt-4 flex justify-between text-sm font-medium text-accent">
+              <button type="button" onClick={() => setSent(false)}>
+                Changer d'adresse
+              </button>
+              <button type="button" onClick={(e) => void submit(e)} disabled={busy}>
+                Renvoyer un code
+              </button>
+            </div>
+          </form>
         ) : (
           <form onSubmit={submit}>
             <label className="block">
               <span className="text-sm font-semibold">Votre adresse e-mail</span>
               <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
             </label>
-            <p className="mt-2 text-sm text-muted">Pas de mot de passe : vous recevez un lien pour vous connecter.</p>
+            <p className="mt-2 text-sm text-muted">Pas de mot de passe : vous recevez un code par e-mail pour vous connecter.</p>
             {error && <p className="mt-2 text-sm text-danger">{error}</p>}
             <button type="submit" disabled={busy} className={`${button} mt-4`}>
-              {busy ? "Envoi…" : "Recevoir le lien"}
+              {busy ? "Envoi…" : "Recevoir le code"}
             </button>
           </form>
         )}

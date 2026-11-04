@@ -49,6 +49,8 @@ export function Reglages() {
 
       <Membres />
 
+      <Installer />
+
       <p className="px-1 text-xs text-muted">Version de test · {toISO(new Date())}</p>
     </Page>
   );
@@ -117,6 +119,23 @@ function Membres() {
           Se déconnecter
         </button>
       </div>
+    </Card>
+  );
+}
+
+function Installer() {
+  const standalone =
+    window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  if (standalone) return null;
+  return (
+    <Card tint>
+      <p className="text-sm font-semibold">📲 Mettre l'app sur l'écran d'accueil</p>
+      <ol className="mt-2 list-decimal space-y-1 pl-5 text-[15px]">
+        <li>Dans Safari, touchez le bouton Partager (le carré avec une flèche vers le haut).</li>
+        <li>Faites défiler et touchez « Sur l'écran d'accueil ».</li>
+        <li>Touchez « Ajouter ».</li>
+        <li>Ouvrez l'app depuis l'icône et connectez-vous avec le code reçu par e-mail.</li>
+      </ol>
     </Card>
   );
 }
