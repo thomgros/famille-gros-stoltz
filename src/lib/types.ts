@@ -126,6 +126,8 @@ export interface ChatMessage {
   id: string;
   author: "thomas" | "julia" | "assistant";
   content: string;
-  verdict?: "ok" | "precaution" | "eviter";
+  verdict?: "ok" | "precaution" | "eviter" | "inconnu";
+  title?: string;
+  sources?: string[];
   createdAt: string;
 }
