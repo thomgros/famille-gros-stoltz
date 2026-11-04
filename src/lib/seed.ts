@@ -8,9 +8,14 @@ import milestones from "../../seed/milestones.json";
 interface SeedStep {
   version: number;
   collections: Record<string, { id: string }[]>;
+  /** Éléments du seed d'origine à retirer des foyers déjà créés. */
+  removals?: Record<string, string[]>;
 }
 
-export const SEED_STEPS: SeedStep[] = [{ version: 1, collections: { milestones } }];
+export const SEED_STEPS: SeedStep[] = [
+  { version: 1, collections: { milestones } },
+  { version: 2, collections: {}, removals: { milestones: ["voyage-usa"] } },
+];
 
 export const LATEST_SEED = Math.max(...SEED_STEPS.map((s) => s.version));
 
@@ -21,8 +26,14 @@ export async function runSeed(householdId: string, currentVersion: number) {
       docs.map((d) => ({ household_id: householdId, collection, id: d.id, data: d })),
     );
     // ignoreDuplicates : si l'autre parent a lancé le seed en même temps, pas de doublon.
-    const { error } = await supabase.from("docs").upsert(rows, { onConflict: "household_id,collection,id", ignoreDuplicates: true });
-    if (error) throw error;
+    if (rows.length) {
+      const { error } = await supabase.from("docs").upsert(rows, { onConflict: "household_id,collection,id", ignoreDuplicates: true });
+      if (error) throw error;
+    }
+    for (const [collection, ids] of Object.entries(step.removals ?? {})) {
+      const { error } = await supabase.from("docs").delete().eq("household_id", householdId).eq("collection", collection).in("id", ids);
+      if (error) throw error;
+    }
     const { error: e2 } = await supabase.from("households").update({ seed_version: step.version }).eq("id", householdId);
     if (e2) throw e2;
   }

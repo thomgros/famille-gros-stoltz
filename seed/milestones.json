@@ -5,7 +5,6 @@
   { "id": "echo-2", "title": "2e échographie (morphologique)", "kind": "medical", "date": "2027-02-05", "endDate": "2027-03-12", "description": "Entre 20 et 25 SA." },
   { "id": "clim", "title": "Acheter le climatiseur", "kind": "achat", "date": "2027-02-01", "endDate": "2027-04-30", "description": "Avant la hausse des prix du printemps." },
   { "id": "ass-mat", "title": "Rencontrer 3 à 5 ass mat", "kind": "garde", "date": "2027-03-01", "endDate": "2027-05-31", "description": "Contrat irrégulier, horaires atypiques. Chercher aussi une famille pour une nounou partagée." },
-  { "id": "voyage-usa", "title": "Voyage aux États-Unis", "kind": "voyage", "date": "2027-03-25", "approximate": true, "description": "Fin mars, vers 27 SA. Ne rien y acheter pour bébé (siège auto, lait, cosmétiques : normes différentes)." },
   { "id": "commandes-avril", "title": "Commander poussette, cosy, cododo", "kind": "achat", "date": "2027-04-01", "endDate": "2027-04-30", "description": "Essayer les adaptateurs cosy en magasin. Essayer les porte-bébés à deux." },
   { "id": "echo-3", "title": "3e échographie", "kind": "medical", "date": "2027-04-16", "endDate": "2027-05-21", "description": "Entre 30 et 35 SA." },
   { "id": "textiles", "title": "Textiles, change, toilette", "kind": "achat", "date": "2027-05-01", "endDate": "2027-05-31", "description": "Tout laver 2 à 3 fois, aérer la chambre et le cododo." },
