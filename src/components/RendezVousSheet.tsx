@@ -87,11 +87,11 @@ export function RendezVousSheet({ initial, day, onClose, onSave, onDelete }: Pro
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 pb-2 pt-3">
-          <button type="button" onClick={onClose} className="text-[17px] text-accent">
+          <button type="button" onClick={onClose} className="text-[17px] text-tone-strong">
             Annuler
           </button>
           <p className="text-[17px] font-semibold">{initial ? "Rendez-vous" : "Nouveau rendez-vous"}</p>
-          <button type="button" onClick={submit} disabled={!canSave} className="text-[17px] font-semibold text-accent disabled:opacity-35">
+          <button type="button" onClick={submit} disabled={!canSave} className="text-[17px] font-semibold text-tone-strong disabled:opacity-35">
             {initial ? "OK" : "Ajouter"}
           </button>
         </div>
@@ -146,7 +146,7 @@ export function RendezVousSheet({ initial, day, onClose, onSave, onDelete }: Pro
             <Group>
               {confirmDelete ? (
                 <div className="flex">
-                  <button type="button" onClick={() => setConfirmDelete(false)} className="flex-1 py-3 text-[17px] text-accent">
+                  <button type="button" onClick={() => setConfirmDelete(false)} className="flex-1 py-3 text-[17px] text-tone-strong">
                     Garder
                   </button>
                   <button type="button" onClick={() => onDelete(initial.id)} className="flex-1 py-3 text-[17px] font-semibold text-danger">

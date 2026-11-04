@@ -2,31 +2,42 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { MilestoneKind } from "../lib/types";
 
-export function Page({ title, subtitle, action, children }: { title: string; subtitle?: string; action?: ReactNode; children: ReactNode }) {
+export type Tone = "butter" | "lavender" | "mint" | "peach" | "sky" | "rose";
+
+export function Page({ title, subtitle, action, tone = "butter", children }: { title: string; subtitle?: string; action?: ReactNode; tone?: Tone; children: ReactNode }) {
   return (
-    <div className="mx-auto max-w-xl px-4 pt-safe pb-28">
-      <header className="flex items-end justify-between gap-3 pb-4 pt-2">
-        <div className="min-w-0">
-          {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
-          <h1 className="text-[28px] font-bold leading-tight tracking-tight">{title}</h1>
-        </div>
-        {action}
-      </header>
-      <div className="space-y-4">{children}</div>
+    <div className={`tone-${tone} relative isolate min-h-dvh`}>
+      <div className="page-band absolute inset-x-0 top-0 -z-10 h-80" aria-hidden />
+      <div className="mx-auto max-w-xl px-4 pt-safe pb-28">
+        <header className="flex items-end justify-between gap-3 pb-4 pt-2">
+          <div className="min-w-0">
+            {subtitle && <p className="text-sm font-medium text-tone-strong">{subtitle}</p>}
+            <h1 className="text-[28px] font-bold leading-tight tracking-tight">{title}</h1>
+          </div>
+          {action}
+        </header>
+        <div className="space-y-4">{children}</div>
+      </div>
     </div>
   );
 }
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-3xl border border-line bg-surface p-4 ${className}`}>{children}</section>;
+/** tint : la carte prend une teinte pastel (celle de la page, ou celle du parent `tone-…`). */
+export function Card({ children, className = "", tint = false }: { children: ReactNode; className?: string; tint?: boolean }) {
+  return (
+    <section className={`rounded-3xl border p-4 ${tint ? "border-tone-mid/40 bg-tone-soft/55" : "border-line bg-surface"} ${className}`}>{children}</section>
+  );
 }
 
 export function SectionTitle({ children, to }: { children: ReactNode; to?: string }) {
   return (
     <div className="flex items-center justify-between px-1 pb-2">
-      <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted">{children}</h2>
+      <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-tone-strong">
+        <span className="size-2 rounded-full bg-tone-mid" aria-hidden />
+        {children}
+      </h2>
       {to && (
-        <Link to={to} className="text-sm font-medium text-accent">
+        <Link to={to} className="text-sm font-medium text-tone-strong">
           Tout voir
         </Link>
       )}
@@ -37,14 +48,14 @@ export function SectionTitle({ children, to }: { children: ReactNode; to?: strin
 export function ProgressBar({ value, label }: { value: number; label?: string }) {
   return (
     <div
-      className="h-2.5 w-full overflow-hidden rounded-full bg-surface-2"
+      className="h-2.5 w-full overflow-hidden rounded-full bg-white/70"
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(value * 100)}
       aria-label={label}
     >
-      <div className="h-full rounded-full bg-accent-fill transition-[width] duration-500" style={{ width: `${Math.max(2, value * 100)}%` }} />
+      <div className="h-full rounded-full bg-tone-mid transition-[width] duration-500" style={{ width: `${Math.max(2, value * 100)}%` }} />
     </div>
   );
 }
@@ -76,8 +87,8 @@ export function KindDot({ kind }: { kind: MilestoneKind }) {
 
 export function ComingSoon({ step, title, items }: { step: number; title: string; items: string[] }) {
   return (
-    <Card>
-      <p className="text-sm font-semibold text-accent">Étape {step}</p>
+    <Card tint>
+      <p className="text-sm font-semibold text-tone-strong">Étape {step}</p>
       <h2 className="mt-1 text-lg font-semibold">{title}</h2>
       <ul className="mt-3 space-y-2 text-[15px] text-muted">
         {items.map((i) => (

@@ -79,24 +79,24 @@ export function Calendrier() {
     <div>
       <div className="flex items-center justify-between px-1 pb-2">
         <h2 className="whitespace-nowrap text-[22px] font-bold">
-          <span className="text-accent">{formatMonth(month).split(" ")[0]}</span>{" "}
+          <span className="text-tone-strong">{formatMonth(month).split(" ")[0]}</span>{" "}
           <span className="font-semibold text-muted">{month.getFullYear()}</span>
         </h2>
         <div className="flex shrink-0 items-center">
-          <button type="button" onClick={goToday} className="rounded-full px-2 py-1.5 text-[15px] font-medium text-accent">
+          <button type="button" onClick={goToday} className="rounded-full px-2 py-1.5 text-[15px] font-medium text-tone-strong">
             Aujourd'hui
           </button>
-          <button type="button" onClick={() => shift(-1)} aria-label="Mois précédent" className="grid size-8 place-items-center text-2xl text-accent">
+          <button type="button" onClick={() => shift(-1)} aria-label="Mois précédent" className="grid size-8 place-items-center text-2xl text-tone-strong">
             ‹
           </button>
-          <button type="button" onClick={() => shift(1)} aria-label="Mois suivant" className="grid size-8 place-items-center text-2xl text-accent">
+          <button type="button" onClick={() => shift(1)} aria-label="Mois suivant" className="grid size-8 place-items-center text-2xl text-tone-strong">
             ›
           </button>
           <button
             type="button"
             onClick={() => setSheet({ day: selected })}
             aria-label="Nouveau rendez-vous"
-            className="grid size-9 place-items-center text-[28px] font-light leading-none text-accent"
+            className="grid size-9 place-items-center text-[28px] font-light leading-none text-tone-strong"
           >
             +
           </button>
@@ -104,7 +104,7 @@ export function Calendrier() {
       </div>
 
       <div
-        className="rounded-3xl border border-line bg-surface px-2 pb-2 pt-3"
+        className="rounded-3xl border border-tone-mid/40 bg-tone-soft/55 px-2 pb-2 pt-3"
         onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
         onTouchEnd={(e) => {
           if (touchX.current === null) return;
@@ -113,7 +113,7 @@ export function Calendrier() {
           touchX.current = null;
         }}
       >
-        <div className="grid grid-cols-7 pb-1 text-center text-[11px] font-semibold text-muted">
+        <div className="grid grid-cols-7 pb-1 text-center text-[11px] font-semibold text-tone-strong/80">
           {WEEKDAYS.map((d, i) => (
             <span key={i}>{d}</span>
           ))}
@@ -139,7 +139,7 @@ export function Calendrier() {
                     isSel && isToday
                       ? "bg-today font-semibold text-white"
                       : isSel
-                        ? "bg-ink font-semibold text-bg"
+                        ? "bg-tone-strong font-semibold text-white"
                         : isToday
                           ? "font-semibold text-today"
                           : weekend
@@ -149,7 +149,7 @@ export function Calendrier() {
                 >
                   {d.getDate()}
                 </span>
-                <span className={`size-1.5 rounded-full ${dot ? "bg-muted/70" : ""}`} />
+                <span className={`size-1.5 rounded-full ${dot ? "bg-tone-strong/70" : ""}`} />
               </button>
             );
           })}
@@ -161,10 +161,10 @@ export function Calendrier() {
           <p className="font-semibold first-letter:uppercase">{formatLong(selected)}</p>
           {sa >= 0 && sa <= 42 && <p className="tabular text-sm text-muted">{sa} SA</p>}
         </div>
-        <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
+        <div className="divide-y divide-line overflow-hidden rounded-3xl border border-tone-mid/40 bg-surface">
           {events.length === 0 && (
             <button type="button" onClick={() => setSheet({ day: selected })} className="w-full px-4 py-4 text-left text-[15px] text-muted">
-              Aucun événement. <span className="text-accent">Ajouter un rendez-vous</span>
+              Aucun événement. <span className="text-tone-strong">Ajouter un rendez-vous</span>
             </button>
           )}
           {events.map((e) => (

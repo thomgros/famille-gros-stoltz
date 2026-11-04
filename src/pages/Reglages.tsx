@@ -10,21 +10,22 @@ export function Reglages() {
 
   return (
     <Page
+      tone="butter"
       title="Réglages"
       action={
-        <Link to="/" className="text-sm font-medium text-accent">
+        <Link to="/" className="text-sm font-medium text-tone-strong">
           Fermer
         </Link>
       }
     >
-      <Card>
+      <Card tint>
         <label className="block">
           <span className="text-sm font-semibold">Date du terme (41 SA, donnée par la gynécologue)</span>
           <input
             type="date"
             value={household.dueDate}
             onChange={(e) => e.target.value && update({ dueDate: e.target.value })}
-            className="mt-2 block w-full rounded-2xl border border-line bg-surface-2 px-3 py-3 text-base"
+            className="mt-2 block w-full rounded-2xl border border-tone-mid/50 bg-white/75 px-3 py-3 text-base"
           />
         </label>
         <dl className="mt-4 space-y-2 text-[15px]">
@@ -39,7 +40,7 @@ export function Reglages() {
           <button
             type="button"
             onClick={() => update({ dueDate: DEFAULT_HOUSEHOLD.dueDate })}
-            className="mt-3 text-sm font-medium text-accent"
+            className="mt-3 text-sm font-medium text-tone-strong"
           >
             Revenir au {formatDayYear(new Date(2027, 6, 3))}
           </button>
@@ -61,7 +62,7 @@ function Membres() {
 
   if (!membership) {
     return (
-      <Card>
+      <Card tint>
         <p className="text-sm font-semibold">Membres du foyer</p>
         <p className="mt-2 text-sm text-muted">Mode local : les données restent sur cet appareil. Le partage s'active quand Supabase est configuré.</p>
       </Card>
@@ -87,7 +88,7 @@ function Membres() {
   }
 
   return (
-    <Card>
+    <Card tint>
       <p className="text-sm font-semibold">Membres du foyer</p>
       <ul className="mt-2 space-y-1 text-[15px]">
         {(["thomas", "julia"] as const).map((m) => (
@@ -101,18 +102,18 @@ function Membres() {
         ))}
       </ul>
       {!otherJoined && (
-        <div className="mt-4 rounded-2xl bg-accent-soft p-3">
+        <div className="mt-4 rounded-2xl bg-white/65 p-3">
           <p className="text-[15px]">
             Invitez {NAMES[other]} avec ce lien, ou le code <strong className="tracking-widest">{membership.inviteCode}</strong>.
           </p>
-          <button type="button" onClick={() => void share()} className="mt-3 w-full rounded-2xl bg-accent-fill py-3 font-semibold text-on-accent">
+          <button type="button" onClick={() => void share()} className="mt-3 w-full rounded-2xl bg-tone-mid py-3 font-semibold text-ink">
             {copied ? "Lien copié" : `Envoyer l'invitation à ${NAMES[other]}`}
           </button>
         </div>
       )}
       <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-sm">
         <span className="truncate text-muted">{email}</span>
-        <button type="button" onClick={() => void signOut()} className="shrink-0 font-medium text-accent">
+        <button type="button" onClick={() => void signOut()} className="shrink-0 font-medium text-tone-strong">
           Se déconnecter
         </button>
       </div>

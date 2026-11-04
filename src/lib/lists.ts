@@ -14,6 +14,32 @@ export const TASK_CATEGORIES: { value: Task["category"]; label: string }[] = [
   { value: "naissance", label: "Naissance" },
   { value: "voyage", label: "Voyage" },
 ];
+/** Couleur (variable CSS) de chaque catégorie de tâche. */
+export const TASK_CATEGORY_COLOR: Record<Task["category"], string> = {
+  admin: "var(--k-admin)",
+  garde: "var(--k-garde)",
+  sante: "var(--k-medical)",
+  achats: "var(--k-achat)",
+  maison: "var(--k-maison)",
+  naissance: "var(--k-naissance)",
+  voyage: "var(--k-voyage)",
+};
+
+/** Emoji et couleur de chaque catégorie d'achat. */
+export const ITEM_CATEGORY_STYLE: Record<string, { emoji: string; color: string }> = {
+  Sommeil: { emoji: "🌙", color: "var(--k-admin)" },
+  Change: { emoji: "🧷", color: "var(--k-medical)" },
+  "Toilette et santé": { emoji: "🛁", color: "var(--k-garde)" },
+  Repas: { emoji: "🍼", color: "var(--k-achat)" },
+  Vêtements: { emoji: "👕", color: "var(--k-naissance)" },
+  "Sorties et transports": { emoji: "👶", color: "var(--k-voyage)" },
+  Éveil: { emoji: "🧸", color: "var(--k-maison)" },
+  "Sécurité de l'appartement": { emoji: "🔒", color: "var(--k-medical)" },
+  "Grand équipement": { emoji: "🛏️", color: "var(--k-admin)" },
+  Autre: { emoji: "✨", color: "var(--k-maison)" },
+};
+export const itemCategoryStyle = (c: string) => ITEM_CATEGORY_STYLE[c] ?? ITEM_CATEGORY_STYLE.Autre;
+
 export const taskCategoryLabel = (c: Task["category"]) => TASK_CATEGORIES.find((x) => x.value === c)?.label ?? c;
 
 export const PRIORITIES: { value: Priority; label: string; short: string }[] = [

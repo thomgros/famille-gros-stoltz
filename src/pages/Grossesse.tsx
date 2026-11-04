@@ -7,6 +7,7 @@ import { datedMilestones, useMilestones } from "../lib/milestones";
 import { useHousehold } from "../lib/store";
 import { useSearchParams } from "react-router-dom";
 import { Calendrier } from "../components/Calendrier";
+import { Segmented } from "../components/sheet";
 
 type View = "semaine" | "calendrier" | "frise";
 const VIEWS: { value: View; label: string }[] = [
@@ -14,26 +15,6 @@ const VIEWS: { value: View; label: string }[] = [
   { value: "calendrier", label: "Calendrier" },
   { value: "frise", label: "Frise" },
 ];
-
-/** Contrôle segmenté façon iOS. */
-function Segmented({ value, onChange }: { value: View; onChange: (v: View) => void }) {
-  return (
-    <div className="grid grid-cols-3 gap-0.5 rounded-[10px] bg-surface-2 p-0.5 text-[14px] font-medium" role="tablist">
-      {VIEWS.map((v) => (
-        <button
-          key={v.value}
-          type="button"
-          role="tab"
-          aria-selected={value === v.value}
-          onClick={() => onChange(v.value)}
-          className={`rounded-[8px] py-1.5 ${value === v.value ? "bg-surface shadow-sm" : "text-muted"}`}
-        >
-          {v.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 export function Grossesse() {
   const { household } = useHousehold();
@@ -48,18 +29,18 @@ export function Grossesse() {
   const setView = (v: View) => setParams(v === "semaine" ? {} : { vue: v }, { replace: true });
 
   return (
-    <Page title="Grossesse" subtitle={`Aujourd'hui : ${p.sa} SA + ${p.saDays} j · ${p.sg} SG`}>
-      <Segmented value={view} onChange={setView} />
+    <Page tone="lavender" title="Grossesse" subtitle={`Aujourd'hui : ${p.sa} SA + ${p.saDays} j · ${p.sg} SG`}>
+      <Segmented value={view} onChange={setView} options={VIEWS} />
       {view === "calendrier" && <Calendrier />}
       {view === "frise" && <Timeline dueDate={household.dueDate} now={now} />}
       {view === "semaine" && (
-      <Card>
+      <Card className="border-transparent bg-tone-hero">
         <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => setSa((s) => Math.max(4, s - 1))}
             disabled={sa <= 4}
-            className="grid size-11 place-items-center rounded-full bg-surface-2 text-xl disabled:opacity-30"
+            className="grid size-11 place-items-center rounded-full bg-white/70 text-xl text-tone-strong disabled:opacity-30"
             aria-label="Semaine précédente"
           >
             ‹
@@ -74,7 +55,7 @@ export function Grossesse() {
             type="button"
             onClick={() => setSa((s) => Math.min(41, s + 1))}
             disabled={sa >= 41}
-            className="grid size-11 place-items-center rounded-full bg-surface-2 text-xl disabled:opacity-30"
+            className="grid size-11 place-items-center rounded-full bg-white/70 text-xl text-tone-strong disabled:opacity-30"
             aria-label="Semaine suivante"
           >
             ›
@@ -93,13 +74,13 @@ export function Grossesse() {
           <strong>{w.fruit}</strong>
         </p>
         <p className="mt-4 text-[15px] leading-relaxed">{w.development}</p>
-        {w.forParents && <p className="mt-2 rounded-2xl bg-accent-soft px-3 py-2 text-[15px]">{w.forParents}</p>}
+        {w.forParents && <p className="mt-2 rounded-2xl bg-white/60 px-3 py-2 text-[15px]">💛 {w.forParents}</p>}
         {sa !== currentSa && (
-          <button type="button" onClick={() => setSa(currentSa)} className="mt-4 w-full rounded-2xl border border-line py-2.5 text-sm font-medium text-accent">
+          <button type="button" onClick={() => setSa(currentSa)} className="mt-4 w-full rounded-2xl bg-white/60 py-2.5 text-sm font-medium text-tone-strong">
             Revenir à cette semaine
           </button>
         )}
-        <p className="mt-3 text-xs text-muted">Moyennes indicatives. Taille tête-fesses jusqu'à 20 SA, puis tête-talons. L'échographie fait foi.</p>
+        <p className="mt-3 text-xs text-ink/60">Moyennes indicatives. Taille tête-fesses jusqu'à 20 SA, puis tête-talons. L'échographie fait foi.</p>
       </Card>
 
       )}
@@ -109,7 +90,7 @@ export function Grossesse() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-surface-2 px-2 py-2.5">
+    <div className="rounded-2xl bg-white/60 px-2 py-2.5">
       <p className="text-xs text-muted">{label}</p>
       <p className="tabular text-lg font-semibold">{value}</p>
     </div>
@@ -143,11 +124,11 @@ function Timeline({ dueDate, now }: { dueDate: string; now: Date }) {
     <div>
       <SectionTitle>Frise et jalons</SectionTitle>
       {past.length > 0 && (
-        <button type="button" onClick={() => setShowPast((v) => !v)} className="mb-2 px-1 text-sm font-medium text-accent">
+        <button type="button" onClick={() => setShowPast((v) => !v)} className="mb-2 px-1 text-sm font-medium text-tone-strong">
           {showPast ? "Masquer les jalons passés" : `Afficher les ${past.length} jalons passés`}
         </button>
       )}
-      <Card className="px-3">
+      <Card tint className="px-3">
         <ol className="relative">
           <span className="absolute bottom-2 left-[9px] top-2 w-px bg-line" aria-hidden />
           {groups.map((g) => (
@@ -170,7 +151,7 @@ function Timeline({ dueDate, now }: { dueDate: string; now: Date }) {
                       <div className="pt-1.5">
                         <KindDot kind={m.kind} />
                       </div>
-                      <div className={`min-w-0 flex-1 rounded-2xl px-3 py-2 ${ongoing ? "bg-accent-soft" : ""}`}>
+                      <div className={`min-w-0 flex-1 rounded-2xl px-3 py-2 ${ongoing ? "bg-white/70" : ""}`}>
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="font-medium leading-snug">{m.title}</p>
                           {ongoing && <span className="text-xs font-semibold text-accent">en cours</span>}

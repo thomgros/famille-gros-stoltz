@@ -41,11 +41,11 @@ export function Sheet({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-2 px-4 pb-2 pt-3">
-          <button type="button" onClick={onCancel} className="text-[17px] text-accent">
+          <button type="button" onClick={onCancel} className="text-[17px] text-tone-strong">
             Annuler
           </button>
           <p className="truncate text-[17px] font-semibold">{title}</p>
-          <button type="button" onClick={onDone} disabled={!canDone} className="text-[17px] font-semibold text-accent disabled:opacity-35">
+          <button type="button" onClick={onDone} disabled={!canDone} className="text-[17px] font-semibold text-tone-strong disabled:opacity-35">
             {doneLabel}
           </button>
         </div>
@@ -105,7 +105,7 @@ export function DeleteButton({ label, confirming, onAsk, onCancel, onConfirm }: 
     <Group>
       {confirming ? (
         <div className="flex">
-          <button type="button" onClick={onCancel} className="flex-1 py-3 text-[17px] text-accent">
+          <button type="button" onClick={onCancel} className="flex-1 py-3 text-[17px] text-tone-strong">
             Garder
           </button>
           <button type="button" onClick={onConfirm} className="flex-1 py-3 text-[17px] font-semibold text-danger">
@@ -137,7 +137,7 @@ export function CheckCircle({ checked, onToggle, label }: { checked: boolean; on
     >
       <span
         className={`grid size-[24px] place-items-center rounded-full border-2 transition-colors ${
-          checked ? "border-accent-fill bg-accent-fill text-on-accent" : "border-muted/50"
+          checked ? "border-tone-mid bg-tone-mid text-ink" : "border-muted/50"
         }`}
       >
         {checked && (
@@ -157,7 +157,7 @@ export function Chip({ active, onClick, children }: { active: boolean; onClick: 
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`shrink-0 rounded-full px-3.5 py-1.5 text-[14px] font-medium ${active ? "bg-ink text-bg" : "bg-surface-2 text-ink"}`}
+      className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[14px] font-medium ${active ? "border-tone-mid bg-tone-mid text-ink" : "border-line bg-surface text-ink"}`}
     >
       {children}
     </button>
@@ -167,7 +167,7 @@ export function Chip({ active, onClick, children }: { active: boolean; onClick: 
 /** Contrôle segmenté façon iOS. */
 export function Segmented<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[] }) {
   return (
-    <div className="grid gap-0.5 rounded-[10px] bg-surface-2 p-0.5 text-[14px] font-medium" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }} role="tablist">
+    <div className="grid gap-0.5 rounded-[12px] bg-white/55 p-1 text-[14px] font-medium ring-1 ring-tone-mid/40" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }} role="tablist">
       {options.map((v) => (
         <button
           key={v.value}
@@ -175,7 +175,7 @@ export function Segmented<T extends string>({ value, onChange, options }: { valu
           role="tab"
           aria-selected={value === v.value}
           onClick={() => onChange(v.value)}
-          className={`rounded-[8px] py-1.5 ${value === v.value ? "bg-surface shadow-sm" : "text-muted"}`}
+          className={`rounded-[9px] py-1.5 ${value === v.value ? "bg-tone-mid font-semibold text-ink shadow-sm" : "text-muted"}`}
         >
           {v.label}
         </button>

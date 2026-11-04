@@ -23,10 +23,45 @@
   --k-vie: #9a7614; /* beurre */
   --k-garde: #3d917b; /* menthe */
   --k-voyage: #3b8d9e;
+  --k-naissance: #b4527a; /* rose */
+  --k-maison: #9a7614;
   --fetus: #f2b79a;
   --womb: #fcefc8;
   --hero: linear-gradient(160deg, #fdf3cf 0%, #fbe7dc 100%);
   color-scheme: light;
+}
+
+/* Teintes pastel par page : chaque onglet a sa couleur (bandeau, puces, cartes). */
+:root,
+.tone-butter {
+  --tone-soft: #fbefc4;
+  --tone-mid: #f4d77c;
+  --tone-strong: #8c6a14;
+}
+.tone-lavender {
+  --tone-soft: #ece4fa;
+  --tone-mid: #cfc0f2;
+  --tone-strong: #6a51ad;
+}
+.tone-mint {
+  --tone-soft: #dcf1e7;
+  --tone-mid: #a9dcc6;
+  --tone-strong: #2b7a62;
+}
+.tone-peach {
+  --tone-soft: #fce4d7;
+  --tone-mid: #f6bfa5;
+  --tone-strong: #a9553a;
+}
+.tone-sky {
+  --tone-soft: #deecf8;
+  --tone-mid: #b3d2ee;
+  --tone-strong: #386a97;
+}
+.tone-rose {
+  --tone-soft: #f9e1e7;
+  --tone-mid: #efb9c8;
+  --tone-strong: #a14467;
 }
 
 /* Pas de mode sombre : l'app reste toujours en tons clairs, même si l'iPhone est en mode sombre. */
@@ -43,6 +78,9 @@
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
   --color-today: var(--today);
+  --color-tone-soft: var(--tone-soft);
+  --color-tone-mid: var(--tone-mid);
+  --color-tone-strong: var(--tone-strong);
   --color-success: var(--success);
   --color-danger: var(--danger);
   --font-sans: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -66,6 +104,16 @@ body {
 
 .bg-hero {
   background: var(--hero);
+}
+
+/* Bandeau dégradé en haut de chaque page, dans la teinte de la page. */
+.page-band {
+  background: linear-gradient(180deg, var(--tone-soft) 0%, color-mix(in srgb, var(--tone-soft) 45%, var(--bg)) 55%, var(--bg) 100%);
+}
+
+/* Carte « héros » dans la teinte de la page. */
+.bg-tone-hero {
+  background: linear-gradient(150deg, var(--tone-soft) 0%, color-mix(in srgb, var(--tone-mid) 55%, var(--surface)) 100%);
 }
 
 .pb-safe {

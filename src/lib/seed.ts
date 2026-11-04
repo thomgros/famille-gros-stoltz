@@ -38,6 +38,8 @@ export const SEED_STEPS: SeedStep[] = [
   { version: 6, removals: { tasks: ["t33-installer-rideaux-occultants-o"], items: ["i05-rideaux-occultants-ou-film-ant"] } },
   // Le taux « 70 % puis 60 % du net » vaut pour les salariés, pas pour une artiste-auteur ni un intermittent.
   { version: 7, patch: { tasks: { "t14-decider-des-dates-du-conge-de-": { notes: "Indemnisation à vérifier selon le statut (Julia artiste-auteur, Thomas intermittent)." } } } },
+  // Statuts : Julia artiste-auteur, Thomas intermittent.
+  { version: 8, collections: { tasks: (tasks as Doc[]).filter((t) => ["t39-droits-maternite-artiste-auteur", "t40-droits-paternite-intermittent"].includes(t.id)) } },
 ];
 
 export const LATEST_SEED = Math.max(...SEED_STEPS.map((s) => s.version));

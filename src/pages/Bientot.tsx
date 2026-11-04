@@ -2,7 +2,7 @@ import { ComingSoon, Page } from "../components/ui";
 
 export function Comparatifs() {
   return (
-    <Page title="Comparatifs">
+    <Page tone="sky" title="Comparatifs" subtitle="Nos choix d'équipement">
       <ComingSoon
         step={5}
         title="Tous les comparatifs du projet"
@@ -19,7 +19,7 @@ export function Comparatifs() {
 
 export function Chat() {
   return (
-    <Page title="Chat">
+    <Page tone="rose" title="Chat" subtitle="Aliments et substances">
       <ComingSoon
         step={6}
         title="Aliments et substances pendant la grossesse"

@@ -5,7 +5,7 @@ import { CheckCircle, Chip, Segmented } from "../components/sheet";
 import { TacheSheet } from "../components/TacheSheet";
 import { ArticleSheet } from "../components/ArticleSheet";
 import { diffDays, formatDay, formatDayYear, formatMonth, today } from "../lib/dates";
-import { euro, ITEM_CATEGORIES, ITEM_PRIORITIES, matchesFilter, memberLabel, TASK_CATEGORIES, taskCategoryLabel, taskDue, useItems, useTasks, type TaskFilter } from "../lib/lists";
+import { euro, itemCategoryStyle, TASK_CATEGORY_COLOR, ITEM_CATEGORIES, ITEM_PRIORITIES, matchesFilter, memberLabel, TASK_CATEGORIES, taskCategoryLabel, taskDue, useItems, useTasks, type TaskFilter } from "../lib/lists";
 import { useHousehold } from "../lib/store";
 import { newId } from "../lib/useCollection";
 import type { Item, Task } from "../lib/types";
@@ -16,7 +16,7 @@ export function Listes() {
   const [params, setParams] = useSearchParams();
   const view = (params.get("vue") as View | null) ?? "todo";
   return (
-    <Page title="Listes">
+    <Page title="Listes" tone={view === "todo" ? "mint" : "peach"} subtitle={view === "todo" ? "À faire ensemble" : "Pour l'arrivée de bébé et après"}>
       <Segmented
         value={view}
         onChange={(v) => setParams(v === "todo" ? {} : { vue: v }, { replace: true })}
@@ -89,12 +89,12 @@ function Todo() {
 
   return (
     <>
-      <form onSubmit={addQuick} className="flex items-center gap-2 rounded-2xl border border-line bg-surface px-3">
-        <span className="text-2xl font-light text-accent" aria-hidden>
+      <form onSubmit={addQuick} className="flex items-center gap-2 rounded-2xl border border-tone-mid/50 bg-white/75 px-3">
+        <span className="text-2xl font-light text-tone-strong" aria-hidden>
           +
         </span>
         <input value={quick} onChange={(e) => setQuick(e.target.value)} placeholder="Ajouter une tâche" className="min-w-0 flex-1 bg-transparent py-3 text-[17px] outline-none placeholder:text-muted" enterKeyHint="done" />
-        <button type="button" onClick={() => setEditing("new")} className="text-sm font-medium text-accent">
+        <button type="button" onClick={() => setEditing("new")} className="text-sm font-medium text-tone-strong">
           Détails
         </button>
       </form>
@@ -121,7 +121,7 @@ function Todo() {
       <p className="px-1 text-sm text-muted">
         {open.length} à faire · {doneCount} faite{doneCount > 1 ? "s" : ""}
         {doneCount > 0 && (
-          <button type="button" onClick={() => setShowDone((v) => !v)} className="ml-2 font-medium text-accent">
+          <button type="button" onClick={() => setShowDone((v) => !v)} className="ml-2 font-medium text-tone-strong">
             {showDone ? "Masquer les faites" : "Afficher les faites"}
           </button>
         )}
@@ -131,21 +131,25 @@ function Todo() {
 
       {groups.map((g) => (
         <div key={g.label}>
-          <h2 className="px-1 pb-1.5 text-[13px] font-semibold uppercase tracking-wide text-muted">{g.label}</h2>
-          <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
+          <h2 className="flex items-center gap-2 px-1 pb-1.5 text-[13px] font-semibold uppercase tracking-wide text-tone-strong">
+            <span className="size-2 rounded-full bg-tone-mid" aria-hidden />
+            {g.label}
+          </h2>
+          <div className="divide-y divide-line overflow-hidden rounded-3xl border border-tone-mid/40 bg-surface">
             {g.rows.map(({ t, due }) => {
               const done = t.status === "done";
               const late = !done && due && diffDays(due, now) < 0;
               return (
-                <div key={t.id} role="button" tabIndex={0} onClick={() => setEditing(t)} onKeyDown={(e) => e.key === "Enter" && setEditing(t)} className="flex cursor-pointer items-start gap-1 py-1.5 pl-1.5 pr-4">
+                <div key={t.id} role="button" tabIndex={0} onClick={() => setEditing(t)} onKeyDown={(e) => e.key === "Enter" && setEditing(t)} className="relative flex cursor-pointer items-start gap-1 py-1.5 pl-2.5 pr-4">
+                  <span className="absolute bottom-3 left-0 top-3 w-1 rounded-r-full" style={{ background: TASK_CATEGORY_COLOR[t.category], opacity: done ? 0.35 : 1 }} aria-hidden />
                   <CheckCircle checked={done} onToggle={() => toggle(t)} label={done ? `Marquer « ${t.title} » à faire` : `Marquer « ${t.title} » comme faite`} />
                   <div className="min-w-0 flex-1 py-2">
                     <p className={`leading-snug ${done ? "text-muted line-through" : ""}`}>{t.title}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted">
                       {due && <span className={late ? "font-semibold text-danger" : ""}>{late ? "En retard · " : ""}{t.relativeTo && t.dueLabel ? t.dueLabel : formatDayYear(due)}</span>}
                       <span>{memberLabel(t.owner)}</span>
-                      <span>{taskCategoryLabel(t.category)}</span>
-                      {t.priority === "P0" && !done && <span className="rounded-full bg-accent-soft px-1.5 font-semibold text-accent">Prioritaire</span>}
+                      <span className="font-medium" style={{ color: TASK_CATEGORY_COLOR[t.category] }}>{taskCategoryLabel(t.category)}</span>
+                      {t.priority === "P0" && !done && <span className="rounded-full bg-tone-soft px-1.5 font-semibold text-tone-strong">Prioritaire</span>}
                       {done && t.doneBy && <span>fait par {memberLabel(t.doneBy)}</span>}
                     </p>
                   </div>
@@ -211,12 +215,12 @@ function Achats() {
 
   return (
     <>
-      <Card>
+      <Card className="border-transparent bg-tone-hero">
         <div className="flex items-baseline justify-between">
           <p className="font-semibold tabular">
             {bought} / {scope.length} acheté{bought > 1 ? "s" : ""}
           </p>
-          <button type="button" onClick={() => setEditing("new")} className="text-[15px] font-medium text-accent">
+          <button type="button" onClick={() => setEditing("new")} className="rounded-full bg-white/70 px-3 py-1 text-[15px] font-medium text-tone-strong">
             + Ajouter
           </button>
         </div>
@@ -244,10 +248,18 @@ function Achats() {
         </Chip>
       </div>
 
-      {groups.map(([cat, list]) => (
+      {groups.map(([cat, list]) => {
+        const st = itemCategoryStyle(cat);
+        return (
         <div key={cat}>
-          <h2 className="px-1 pb-1.5 text-[13px] font-semibold uppercase tracking-wide text-muted">{cat}</h2>
-          <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
+          <h2 className="flex items-center gap-2 px-1 pb-1.5 text-[13px] font-semibold uppercase tracking-wide" style={{ color: st.color }}>
+            <span className="grid size-7 place-items-center rounded-full text-[15px]" style={{ background: `color-mix(in srgb, ${st.color} 16%, transparent)` }} aria-hidden>
+              {st.emoji}
+            </span>
+            {cat}
+            <span className="font-medium normal-case text-muted">· {list.filter((i) => i.purchased).length}/{list.length}</span>
+          </h2>
+          <div className="divide-y divide-line overflow-hidden rounded-3xl border" style={{ borderColor: `color-mix(in srgb, ${st.color} 25%, transparent)`, background: `color-mix(in srgb, ${st.color} 5%, var(--surface))` }}>
             {list.map((i) => (
               <div key={i.id} role="button" tabIndex={0} onClick={() => setEditing(i)} onKeyDown={(e) => e.key === "Enter" && setEditing(i)} className="flex cursor-pointer items-start gap-1 py-1.5 pl-1.5 pr-4">
                 <CheckCircle
@@ -275,7 +287,8 @@ function Achats() {
             ))}
           </div>
         </div>
-      ))}
+        );
+      })}
 
       {editing && (
         <ArticleSheet
