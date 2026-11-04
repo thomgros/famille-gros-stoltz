@@ -18,6 +18,8 @@ interface SeedStep {
   overwrite?: Record<string, Doc[]>;
   /** Éléments à retirer des foyers déjà créés. */
   removals?: Record<string, string[]>;
+  /** Champs à corriger sur des éléments existants, sans toucher au reste (case cochée, etc.). */
+  patch?: Record<string, Record<string, Record<string, unknown>>>;
   /** Change la date du terme si elle vaut encore l'ancienne valeur par défaut. */
   dueDate?: { from: string; to: string };
 }
@@ -34,6 +36,8 @@ export const SEED_STEPS: SeedStep[] = [
   // Pas d'employeur (indépendants) : pas de RH.
   { version: 5, removals: { tasks: ["t04-demander-aux-rh-s-il-existe-de"] } },
   { version: 6, removals: { tasks: ["t33-installer-rideaux-occultants-o"], items: ["i05-rideaux-occultants-ou-film-ant"] } },
+  // Le taux « 70 % puis 60 % du net » vaut pour les salariés, pas pour une artiste-auteur ni un intermittent.
+  { version: 7, patch: { tasks: { "t14-decider-des-dates-du-conge-de-": { notes: "Indemnisation à vérifier selon le statut (Julia artiste-auteur, Thomas intermittent)." } } } },
 ];
 
 export const LATEST_SEED = Math.max(...SEED_STEPS.map((s) => s.version));
@@ -59,6 +63,20 @@ export async function runSeed(householdId: string, currentVersion: number) {
     for (const [collection, ids] of Object.entries(step.removals ?? {})) {
       const { error } = await sb.from("docs").delete().eq("household_id", householdId).eq("collection", collection).in("id", ids);
       if (error) throw error;
+    }
+    for (const [collection, docs] of Object.entries(step.patch ?? {})) {
+      for (const [id, fields] of Object.entries(docs)) {
+        const { data, error } = await sb.from("docs").select("data").eq("household_id", householdId).eq("collection", collection).eq("id", id).maybeSingle();
+        if (error) throw error;
+        if (!data) continue; // supprimé par le foyer : on n'y touche pas
+        const { error: e } = await sb
+          .from("docs")
+          .update({ data: { ...(data.data as object), ...fields } })
+          .eq("household_id", householdId)
+          .eq("collection", collection)
+          .eq("id", id);
+        if (e) throw e;
+      }
     }
     if (step.dueDate) {
       const { error } = await sb.from("households").update({ due_date: step.dueDate.to }).eq("id", householdId).eq("due_date", step.dueDate.from);
