@@ -137,7 +137,7 @@ function MotDePasse() {
 
   async function save() {
     setMsg(null);
-    if (pwd.length < 8) return setMsg({ ok: false, text: "8 caractères minimum." });
+    if (pwd.length < 6) return setMsg({ ok: false, text: "6 caractères minimum." });
     if (pwd !== pwd2) return setMsg({ ok: false, text: "Les deux mots de passe sont différents." });
     setBusy(true);
     const { error } = await sb.auth.updateUser({ password: pwd });
@@ -154,7 +154,7 @@ function MotDePasse() {
     <Card tint>
       <p className="text-sm font-semibold">🔑 Mot de passe</p>
       <p className="mt-1 text-sm text-muted">Pour vous connecter dans l'app de l'écran d'accueil avec votre e-mail et ce mot de passe.</p>
-      <input type="password" autoComplete="new-password" placeholder="Nouveau mot de passe (8 caractères min.)" value={pwd} onChange={(e) => setPwd(e.target.value)} className="mt-3 block w-full rounded-2xl border border-tone-mid/50 bg-white/75 px-3 py-3 text-base" />
+      <input type="password" autoComplete="new-password" placeholder="Nouveau mot de passe (6 caractères min.)" value={pwd} onChange={(e) => setPwd(e.target.value)} className="mt-3 block w-full rounded-2xl border border-tone-mid/50 bg-white/75 px-3 py-3 text-base" />
       <input type="password" autoComplete="new-password" placeholder="Confirmer" value={pwd2} onChange={(e) => setPwd2(e.target.value)} className="mt-2 block w-full rounded-2xl border border-tone-mid/50 bg-white/75 px-3 py-3 text-base" />
       {msg && <p className={`mt-2 text-sm ${msg.ok ? "text-tone-strong" : "text-danger"}`}>{msg.text}</p>}
       <button type="button" onClick={() => void save()} disabled={busy || !pwd} className="mt-3 w-full rounded-2xl bg-tone-mid py-3 font-semibold text-ink disabled:opacity-50">
