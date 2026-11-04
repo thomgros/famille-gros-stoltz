@@ -58,7 +58,12 @@ export function Connexion() {
       options: { emailRedirectTo: window.location.origin + window.location.search },
     });
     setBusy(false);
-    if (error) setError(error.message);
+    if (error)
+      setError(
+        error.message.toLowerCase().includes("rate limit")
+          ? "Trop d'e-mails envoyés pour le moment (limite de Supabase). Réessayez dans une heure, ou connectez-vous avec votre mot de passe."
+          : error.message,
+      );
     else setSent(true);
   }
 
