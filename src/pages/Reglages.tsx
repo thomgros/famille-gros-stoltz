@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, Page } from "../components/ui";
 import { formatDayYear, pregnancyStatus, toISO } from "../lib/dates";
@@ -45,16 +46,77 @@ export function Reglages() {
         )}
       </Card>
 
-      <Card>
-        <p className="text-sm font-semibold">Membres du foyer</p>
-        <p className="mt-2 text-[15px]">Thomas · Julia</p>
-        <p className="mt-2 text-sm text-muted">
-          Les comptes et le partage en temps réel arrivent à l'étape 2. Pour l'instant, les réglages restent sur cet appareil.
-        </p>
-      </Card>
+      <Membres />
 
       <p className="px-1 text-xs text-muted">Version de test · {toISO(new Date())}</p>
     </Page>
+  );
+}
+
+const NAMES = { thomas: "Thomas", julia: "Julia" } as const;
+
+function Membres() {
+  const { membership, signOut, state } = useHousehold();
+  const [copied, setCopied] = useState(false);
+
+  if (!membership) {
+    return (
+      <Card>
+        <p className="text-sm font-semibold">Membres du foyer</p>
+        <p className="mt-2 text-sm text-muted">Mode local : les données restent sur cet appareil. Le partage s'active quand Supabase est configuré.</p>
+      </Card>
+    );
+  }
+
+  const link = `${window.location.origin}/?code=${membership.inviteCode}`;
+  const other = membership.member === "thomas" ? "julia" : "thomas";
+  const otherJoined = membership.members.includes(other);
+  const email = state.phase === "ready" ? state.session?.user.email : undefined;
+
+  async function share() {
+    const text = `Rejoins le foyer Famille Gros-Stoltz : ${link}`;
+    try {
+      if (navigator.share) await navigator.share({ title: "Famille Gros-Stoltz", text, url: link });
+      else {
+        await navigator.clipboard.writeText(link);
+        setCopied(true);
+      }
+    } catch {
+      /* partage annulé */
+    }
+  }
+
+  return (
+    <Card>
+      <p className="text-sm font-semibold">Membres du foyer</p>
+      <ul className="mt-2 space-y-1 text-[15px]">
+        {(["thomas", "julia"] as const).map((m) => (
+          <li key={m} className="flex justify-between">
+            <span>
+              {NAMES[m]}
+              {m === membership.member ? " (vous)" : ""}
+            </span>
+            <span className="text-muted">{membership.members.includes(m) ? "connecté·e" : "pas encore"}</span>
+          </li>
+        ))}
+      </ul>
+      {!otherJoined && (
+        <div className="mt-4 rounded-2xl bg-accent-soft p-3">
+          <p className="text-[15px]">
+            Invitez {NAMES[other]} avec ce lien, ou le code <strong className="tracking-widest">{membership.inviteCode}</strong>.
+          </p>
+          <button type="button" onClick={() => void share()} className="mt-3 w-full rounded-2xl bg-accent py-3 font-semibold text-on-accent">
+            {copied ? "Lien copié" : `Envoyer l'invitation à ${NAMES[other]}`}
+          </button>
+        </div>
+      )}
+      <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-sm">
+        <span className="truncate text-muted">{email}</span>
+        <button type="button" onClick={() => void signOut()} className="shrink-0 font-medium text-accent">
+          Se déconnecter
+        </button>
+      </div>
+    </Card>
   );
 }
 

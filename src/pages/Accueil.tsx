@@ -3,7 +3,7 @@ import { Card, KindBadge, Page, ProgressBar, SectionTitle } from "../components/
 import { FetusIllustration } from "../components/FetusIllustration";
 import { fetusWeek, formatSize, formatWeight } from "../data/fetus";
 import { diffDays, formatLong, formatRange, plural, pregnancyStatus, today } from "../lib/dates";
-import { upcomingMilestones } from "../lib/milestones";
+import { upcomingMilestones, useMilestones } from "../lib/milestones";
 import { useHousehold } from "../lib/store";
 
 export function Accueil() {
@@ -11,7 +11,8 @@ export function Accueil() {
   const now = today();
   const p = pregnancyStatus(household.dueDate, now);
   const w = fetusWeek(p.sa);
-  const next = upcomingMilestones(household.dueDate, now, 4);
+  const { docs: milestones } = useMilestones();
+  const next = upcomingMilestones(milestones, household.dueDate, now, 4);
 
   return (
     <Page

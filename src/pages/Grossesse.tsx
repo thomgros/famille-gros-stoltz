@@ -3,7 +3,7 @@ import { Card, KindBadge, KindDot, Page, SectionTitle } from "../components/ui";
 import { FetusIllustration } from "../components/FetusIllustration";
 import { fetusWeek, formatSize, formatWeight } from "../data/fetus";
 import { addDays, diffDays, formatDay, formatMonth, formatRange, pregnancyStatus, saAt, today } from "../lib/dates";
-import { datedMilestones } from "../lib/milestones";
+import { datedMilestones, useMilestones } from "../lib/milestones";
 import { useHousehold } from "../lib/store";
 
 export function Grossesse() {
@@ -83,7 +83,8 @@ function Stat({ label, value }: { label: string; value: string }) {
 function Timeline({ dueDate, now }: { dueDate: string; now: Date }) {
   const [showPast, setShowPast] = useState(false);
   const todayRef = useRef<HTMLLIElement>(null);
-  const all = useMemo(() => datedMilestones(dueDate), [dueDate]);
+  const { docs: milestones } = useMilestones();
+  const all = useMemo(() => datedMilestones(milestones, dueDate), [milestones, dueDate]);
   const past = all.filter((m) => m.end < now);
   const visible = showPast ? all : all.filter((m) => m.end >= now);
 
