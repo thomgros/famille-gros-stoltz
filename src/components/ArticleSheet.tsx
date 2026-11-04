@@ -7,6 +7,7 @@ import type { Item, Member } from "../lib/types";
 interface Props {
   initial?: Item;
   defaultCategory?: string;
+  defaultPriority?: Item["priority"];
   me?: Member;
   onClose: () => void;
   onSave: (i: Item) => void;
@@ -16,10 +17,10 @@ interface Props {
 const priceInput = "w-28 rounded-lg bg-surface-2 px-2 py-1.5 text-right text-[16px] tabular outline-none";
 const fmt = (n?: number) => (n === undefined ? "" : String(n).replace(".", ","));
 
-export function ArticleSheet({ initial, defaultCategory, me, onClose, onSave, onDelete }: Props) {
+export function ArticleSheet({ initial, defaultCategory, defaultPriority, me, onClose, onSave, onDelete }: Props) {
   const [name, setName] = useState(initial?.name ?? "");
   const [quantity, setQuantity] = useState(initial?.quantity ?? "");
-  const [priority, setPriority] = useState<Item["priority"]>(initial?.priority ?? "P1");
+  const [priority, setPriority] = useState<Item["priority"]>(initial?.priority ?? defaultPriority ?? "P1");
   const [category, setCategory] = useState(initial?.category ?? defaultCategory ?? "Autre");
   const [planned, setPlanned] = useState(fmt(initial?.plannedPrice));
   const [paid, setPaid] = useState(fmt(initial?.paidPrice));

@@ -7,6 +7,8 @@ import type { Member, Priority, Task } from "../lib/types";
 
 interface Props {
   initial?: Task;
+  /** Valeurs proposées pour une nouvelle tâche (ajoutée dans un mois ou une catégorie précis). */
+  defaults?: { date?: string; category?: Task["category"] };
   dueDate: string; // terme du foyer, pour afficher les échéances relatives
   me?: Member;
   onClose: () => void;
@@ -14,13 +16,13 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
-export function TacheSheet({ initial, dueDate, me, onClose, onSave, onDelete }: Props) {
+export function TacheSheet({ initial, defaults, dueDate, me, onClose, onSave, onDelete }: Props) {
   const resolved = initial ? taskDue(initial, dueDate) : undefined;
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [hasDate, setHasDate] = useState(!!resolved);
-  const [date, setDate] = useState(resolved ? toISO(resolved) : toISO(new Date()));
+  const [hasDate, setHasDate] = useState(!!resolved || !!defaults?.date);
+  const [date, setDate] = useState(resolved ? toISO(resolved) : (defaults?.date ?? toISO(new Date())));
   const [priority, setPriority] = useState<Priority>(initial?.priority ?? "P1");
-  const [category, setCategory] = useState<Task["category"]>(initial?.category ?? "maison");
+  const [category, setCategory] = useState<Task["category"]>(initial?.category ?? defaults?.category ?? "maison");
   const [owner, setOwner] = useState<Member>(initial?.owner ?? "both");
   const [done, setDone] = useState(initial?.status === "done");
   const [notes, setNotes] = useState(initial?.notes ?? "");

@@ -1,10 +1,11 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { SwipeRow, UndoToast } from "../components/SwipeRow";
 import { useSearchParams } from "react-router-dom";
 import { Card, Page, ProgressBar } from "../components/ui";
 import { CheckCircle, Chip, Segmented } from "../components/sheet";
 import { TacheSheet } from "../components/TacheSheet";
 import { ArticleSheet } from "../components/ArticleSheet";
-import { diffDays, formatDay, formatDayYear, formatMonth, today } from "../lib/dates";
+import { diffDays, formatDay, formatDayYear, formatMonth, toISO, today } from "../lib/dates";
 import { euro, itemCategoryStyle, TASK_CATEGORY_COLOR, ITEM_CATEGORIES, ITEM_PRIORITIES, matchesFilter, memberLabel, TASK_CATEGORIES, taskCategoryLabel, taskDue, useItems, useTasks, type TaskFilter } from "../lib/lists";
 import { useHousehold } from "../lib/store";
 import { newId } from "../lib/useCollection";
@@ -30,6 +31,33 @@ export function Listes() {
   );
 }
 
+// ---------------------------------------------------------------- Annuler une suppression
+
+function useUndo() {
+  const [undo, setUndo] = useState<{ text: string; restore: () => void } | null>(null);
+  useEffect(() => {
+    if (!undo) return;
+    const t = window.setTimeout(() => setUndo(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [undo]);
+  const toast = undo ? <UndoToast text={undo.text} onUndo={undo.restore} onClose={() => setUndo(null)} /> : null;
+  return { setUndo, toast };
+}
+
+const short = (s: string) => (s.length > 32 ? s.slice(0, 30) + "…" : s);
+
+/** Bouton discret en bas d'un groupe pour y ajouter un élément. */
+function AddHere({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="flex w-full items-center gap-2 px-4 py-3 text-left text-[15px] font-medium text-tone-strong">
+      <span className="text-xl leading-none" aria-hidden>
+        +
+      </span>
+      {label}
+    </button>
+  );
+}
+
 // ---------------------------------------------------------------- To-do
 
 const FILTERS: { value: TaskFilter; label: string }[] = [
@@ -48,8 +76,20 @@ function Todo() {
   const [filter, setFilter] = useState<TaskFilter>("all");
   const [category, setCategory] = useState<Task["category"] | "all">("all");
   const [showDone, setShowDone] = useState(false);
-  const [editing, setEditing] = useState<Task | "new" | null>(null);
+  const [editing, setEditing] = useState<Task | { defaults: { date?: string; category?: Task["category"] } } | null>(null);
   const [quick, setQuick] = useState("");
+  const { setUndo, toast } = useUndo();
+
+  function deleteTask(t: Task) {
+    remove(t.id);
+    setUndo({ text: `« ${short(t.title)} » supprimée`, restore: () => save(t) });
+  }
+
+  /** Date proposée pour une tâche ajoutée dans un mois : aujourd'hui pour le mois en cours, sinon le 1er du mois. */
+  function dateForMonth(d: Date) {
+    const first = new Date(d.getFullYear(), d.getMonth(), 1);
+    return toISO(first < now ? now : first);
+  }
 
   const withDue = useMemo(
     () => tasks.map((t) => ({ t, due: taskDue(t, household.dueDate) })).sort((a, b) => (a.due?.getTime() ?? Infinity) - (b.due?.getTime() ?? Infinity) || a.t.priority.localeCompare(b.t.priority)),
@@ -64,11 +104,11 @@ function Todo() {
   );
 
   const groups = useMemo(() => {
-    const map = new Map<string, { label: string; rows: typeof visible }>();
+    const map = new Map<string, { label: string; month?: Date; rows: typeof visible }>();
     for (const r of visible) {
       const key = r.due ? `${r.due.getFullYear()}-${String(r.due.getMonth()).padStart(2, "0")}` : "z";
       const label = r.due ? formatMonth(r.due) : "Sans date";
-      if (!map.has(key)) map.set(key, { label, rows: [] });
+      if (!map.has(key)) map.set(key, { label, month: r.due, rows: [] });
       map.get(key)!.rows.push(r);
     }
     return [...map.values()];
@@ -94,7 +134,7 @@ function Todo() {
           +
         </span>
         <input value={quick} onChange={(e) => setQuick(e.target.value)} placeholder="Ajouter une tâche" className="min-w-0 flex-1 bg-transparent py-3 text-[17px] outline-none placeholder:text-muted" enterKeyHint="done" />
-        <button type="button" onClick={() => setEditing("new")} className="text-sm font-medium text-tone-strong">
+        <button type="button" onClick={() => setEditing({ defaults: { category: category === "all" ? undefined : category } })} className="text-sm font-medium text-tone-strong">
           Détails
         </button>
       </form>
@@ -140,7 +180,8 @@ function Todo() {
               const done = t.status === "done";
               const late = !done && due && diffDays(due, now) < 0;
               return (
-                <div key={t.id} role="button" tabIndex={0} onClick={() => setEditing(t)} onKeyDown={(e) => e.key === "Enter" && setEditing(t)} className="relative flex cursor-pointer items-start gap-1 py-1.5 pl-2.5 pr-4">
+                <SwipeRow key={t.id} onDelete={() => deleteTask(t)}>
+                <div role="button" tabIndex={0} onClick={() => setEditing(t)} onKeyDown={(e) => e.key === "Enter" && setEditing(t)} className="relative flex cursor-pointer items-start gap-1 py-1.5 pl-2.5 pr-4">
                   <span className="absolute bottom-3 left-0 top-3 w-1 rounded-r-full" style={{ background: TASK_CATEGORY_COLOR[t.category], opacity: done ? 0.35 : 1 }} aria-hidden />
                   <CheckCircle checked={done} onToggle={() => toggle(t)} label={done ? `Marquer « ${t.title} » à faire` : `Marquer « ${t.title} » comme faite`} />
                   <div className="min-w-0 flex-1 py-2">
@@ -154,15 +195,21 @@ function Todo() {
                     </p>
                   </div>
                 </div>
+                </SwipeRow>
               );
             })}
+            <AddHere
+              label={g.month ? `Ajouter en ${g.label.toLowerCase()}` : "Ajouter sans date"}
+              onClick={() => setEditing({ defaults: { date: g.month ? dateForMonth(g.month) : undefined, category: category === "all" ? undefined : category } })}
+            />
           </div>
         </div>
       ))}
 
       {editing && (
         <TacheSheet
-          initial={editing === "new" ? undefined : editing}
+          initial={"defaults" in editing ? undefined : editing}
+          defaults={"defaults" in editing ? editing.defaults : undefined}
           dueDate={household.dueDate}
           me={me}
           onClose={() => setEditing(null)}
@@ -171,11 +218,14 @@ function Todo() {
             setEditing(null);
           }}
           onDelete={(id) => {
-            remove(id);
+            const t = tasks.find((x) => x.id === id);
+            if (t) deleteTask(t);
             setEditing(null);
           }}
         />
       )}
+      <p className="px-1 text-center text-[12px] text-muted">Glissez une tâche vers la gauche pour la supprimer.</p>
+      {toast}
     </>
   );
 }
@@ -188,7 +238,13 @@ function Achats() {
   const { docs: items, save, remove } = useItems();
   const [priority, setPriority] = useState<Item["priority"] | "all">("P1");
   const [hideBought, setHideBought] = useState(false);
-  const [editing, setEditing] = useState<Item | "new" | null>(null);
+  const [editing, setEditing] = useState<Item | { defaults: { category?: string; priority?: Item["priority"] } } | null>(null);
+  const { setUndo, toast } = useUndo();
+
+  function deleteItem(i: Item) {
+    remove(i.id);
+    setUndo({ text: `« ${short(i.name)} » supprimé`, restore: () => save(i) });
+  }
 
   const scope = items.filter((i) => priority === "all" || i.priority === priority);
   const bought = scope.filter((i) => i.purchased).length;
@@ -220,7 +276,7 @@ function Achats() {
           <p className="font-semibold tabular">
             {bought} / {scope.length} acheté{bought > 1 ? "s" : ""}
           </p>
-          <button type="button" onClick={() => setEditing("new")} className="rounded-full bg-white/70 px-3 py-1 text-[15px] font-medium text-tone-strong">
+          <button type="button" onClick={() => setEditing({ defaults: { priority: priority === "all" ? undefined : priority } })} className="rounded-full bg-white/70 px-3 py-1 text-[15px] font-medium text-tone-strong">
             + Ajouter
           </button>
         </div>
@@ -261,7 +317,8 @@ function Achats() {
           </h2>
           <div className="divide-y divide-line overflow-hidden rounded-3xl border" style={{ borderColor: `color-mix(in srgb, ${st.color} 25%, transparent)`, background: `color-mix(in srgb, ${st.color} 5%, var(--surface))` }}>
             {list.map((i) => (
-              <div key={i.id} role="button" tabIndex={0} onClick={() => setEditing(i)} onKeyDown={(e) => e.key === "Enter" && setEditing(i)} className="flex cursor-pointer items-start gap-1 py-1.5 pl-1.5 pr-4">
+              <SwipeRow key={i.id} onDelete={() => deleteItem(i)}>
+              <div role="button" tabIndex={0} onClick={() => setEditing(i)} onKeyDown={(e) => e.key === "Enter" && setEditing(i)} className="flex cursor-pointer items-start gap-1 py-1.5 pl-1.5 pr-4">
                 <CheckCircle
                   checked={i.purchased}
                   onToggle={() =>
@@ -284,7 +341,9 @@ function Achats() {
                   {i.tip && !i.purchased && <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-muted">{i.tip}</p>}
                 </div>
               </div>
+              </SwipeRow>
             ))}
+            <AddHere label={`Ajouter dans ${cat}`} onClick={() => setEditing({ defaults: { category: cat, priority: priority === "all" ? undefined : priority } })} />
           </div>
         </div>
         );
@@ -292,7 +351,9 @@ function Achats() {
 
       {editing && (
         <ArticleSheet
-          initial={editing === "new" ? undefined : editing}
+          initial={"defaults" in editing ? undefined : editing}
+          defaultCategory={"defaults" in editing ? editing.defaults.category : undefined}
+          defaultPriority={"defaults" in editing ? editing.defaults.priority : undefined}
           me={me}
           onClose={() => setEditing(null)}
           onSave={(i) => {
@@ -300,11 +361,14 @@ function Achats() {
             setEditing(null);
           }}
           onDelete={(id) => {
-            remove(id);
+            const i = items.find((x) => x.id === id);
+            if (i) deleteItem(i);
             setEditing(null);
           }}
         />
       )}
+      <p className="px-1 text-center text-[12px] text-muted">Glissez un article vers la gauche pour le supprimer.</p>
+      {toast}
     </>
   );
 }
