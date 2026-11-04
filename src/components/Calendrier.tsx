@@ -137,11 +137,11 @@ export function Calendrier() {
                 <span
                   className={`tabular grid size-8 place-items-center rounded-full text-[17px] ${
                     isSel && isToday
-                      ? "bg-[#ff3b30] font-semibold text-white"
+                      ? "bg-today font-semibold text-white"
                       : isSel
                         ? "bg-ink font-semibold text-bg"
                         : isToday
-                          ? "font-semibold text-[#ff3b30]"
+                          ? "font-semibold text-today"
                           : weekend
                             ? "text-muted"
                             : ""

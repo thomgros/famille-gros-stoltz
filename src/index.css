@@ -1,67 +1,85 @@
 @import "tailwindcss";
 
+/* Palette douce : fond crème, jaune beurre en couleur principale,
+   pastels (pêche, bleu ciel, lavande, menthe) pour distinguer les catégories. */
+
 :root {
-  --bg: #fbf7f2;
-  --surface: #ffffff;
-  --surface-2: #f5eee6;
-  --ink: #2b2420;
-  --muted: #7a6e66;
-  --line: #ece3da;
-  --accent: #b8664e;
-  --accent-soft: #f3e3d3;
-  --on-accent: #ffffff;
-  --k-medical: #4f78b8;
-  --k-admin: #8a63b8;
-  --k-achat: #a9822a;
-  --k-vie: #b8664e;
-  --k-garde: #3f8f6b;
-  --k-voyage: #2f8a9c;
-  --fetus: #e8b59a;
-  --womb: #f6e4d6;
+  --bg: #fbf7ec;
+  --surface: #fffdf7;
+  --surface-2: #f5efdc;
+  --ink: #2f2a22;
+  --muted: #80776a;
+  --line: #ebe3cc;
+  --accent: #8c6a14; /* texte et icônes : beurre foncé, lisible sur crème */
+  --accent-fill: #f4d77c; /* boutons et barres : jaune beurre */
+  --accent-soft: #fbf0c9;
+  --on-accent: #2f2a22;
+  --today: #e07a5f; /* aujourd'hui dans le calendrier : corail doux */
+  --success: #7cc4a4;
+  --danger: #c8553d;
+  --k-medical: #4f86b5; /* bleu ciel */
+  --k-admin: #8a70c2; /* lavande */
+  --k-achat: #c46f50; /* pêche */
+  --k-vie: #9a7614; /* beurre */
+  --k-garde: #3d917b; /* menthe */
+  --k-voyage: #3b8d9e;
+  --fetus: #f2b79a;
+  --womb: #fcefc8;
+  --hero: linear-gradient(160deg, #fdf3cf 0%, #fbe7dc 100%);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1c1917;
-    --surface: #26211e;
-    --surface-2: #2f2925;
-    --ink: #f3ece6;
-    --muted: #a89c93;
-    --line: #3a332e;
-    --accent: #e0957c;
-    --accent-soft: #3d2c25;
-    --on-accent: #1c1917;
-    --k-medical: #8fb0e6;
-    --k-admin: #c0a0e6;
-    --k-achat: #d9b764;
-    --k-vie: #e0957c;
-    --k-garde: #7cc8a4;
-    --k-voyage: #6fc3d3;
-    --fetus: #d79c80;
-    --womb: #3a2c25;
+    --bg: #1d1a14;
+    --surface: #27231b;
+    --surface-2: #322d22;
+    --ink: #f4eedd;
+    --muted: #b2a891;
+    --line: #3d372a;
+    --accent: #efd27a;
+    --accent-fill: #e9cc6f;
+    --accent-soft: #3a321b;
+    --on-accent: #2a2414;
+    --today: #f0957c;
+    --success: #6fbf9b;
+    --danger: #ef8a73;
+    --k-medical: #93bde3;
+    --k-admin: #c3b0ec;
+    --k-achat: #f0a88c;
+    --k-vie: #efd27a;
+    --k-garde: #86d0b8;
+    --k-voyage: #7ccbd9;
+    --fetus: #e3a586;
+    --womb: #3d3420;
+    --hero: linear-gradient(160deg, #3a321b 0%, #3a2a24 100%);
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #1c1917;
-  --surface: #26211e;
-  --surface-2: #2f2925;
-  --ink: #f3ece6;
-  --muted: #a89c93;
-  --line: #3a332e;
-  --accent: #e0957c;
-  --accent-soft: #3d2c25;
-  --on-accent: #1c1917;
-  --k-medical: #8fb0e6;
-  --k-admin: #c0a0e6;
-  --k-achat: #d9b764;
-  --k-vie: #e0957c;
-  --k-garde: #7cc8a4;
-  --k-voyage: #6fc3d3;
-  --fetus: #d79c80;
-  --womb: #3a2c25;
+  --bg: #1d1a14;
+  --surface: #27231b;
+  --surface-2: #322d22;
+  --ink: #f4eedd;
+  --muted: #b2a891;
+  --line: #3d372a;
+  --accent: #efd27a;
+  --accent-fill: #e9cc6f;
+  --accent-soft: #3a321b;
+  --on-accent: #2a2414;
+  --today: #f0957c;
+  --success: #6fbf9b;
+  --danger: #ef8a73;
+  --k-medical: #93bde3;
+  --k-admin: #c3b0ec;
+  --k-achat: #f0a88c;
+  --k-vie: #efd27a;
+  --k-garde: #86d0b8;
+  --k-voyage: #7ccbd9;
+  --fetus: #e3a586;
+  --womb: #3d3420;
+  --hero: linear-gradient(160deg, #3a321b 0%, #3a2a24 100%);
   color-scheme: dark;
 }
 
@@ -73,8 +91,12 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-accent: var(--accent);
+  --color-accent-fill: var(--accent-fill);
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
+  --color-today: var(--today);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
   --font-sans: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 }
 
@@ -92,6 +114,10 @@ body {
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+.bg-hero {
+  background: var(--hero);
 }
 
 .pb-safe {

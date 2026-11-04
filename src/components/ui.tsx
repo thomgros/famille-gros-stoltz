@@ -44,7 +44,7 @@ export function ProgressBar({ value, label }: { value: number; label?: string })
       aria-valuenow={Math.round(value * 100)}
       aria-label={label}
     >
-      <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${Math.max(2, value * 100)}%` }} />
+      <div className="h-full rounded-full bg-accent-fill transition-[width] duration-500" style={{ width: `${Math.max(2, value * 100)}%` }} />
     </div>
   );
 }

@@ -14,7 +14,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 const input = "mt-2 block w-full rounded-2xl border border-line bg-surface-2 px-3 py-3 text-base";
-const button = "w-full rounded-2xl bg-accent py-3.5 font-semibold text-on-accent disabled:opacity-50";
+const button = "w-full rounded-2xl bg-accent-fill py-3.5 font-semibold text-on-accent disabled:opacity-50";
 
 export function Connexion() {
   const [email, setEmail] = useState("");
@@ -55,7 +55,7 @@ export function Connexion() {
               <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
             </label>
             <p className="mt-2 text-sm text-muted">Pas de mot de passe : vous recevez un lien pour vous connecter.</p>
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-sm text-danger">{error}</p>}
             <button type="submit" disabled={busy} className={`${button} mt-4`}>
               {busy ? "Envoi…" : "Recevoir le lien"}
             </button>
@@ -129,7 +129,7 @@ export function Foyer() {
               ? "Le foyer est créé avec toutes les données du projet. Vous inviterez l'autre parent depuis les Réglages."
               : "Le code se trouve dans les Réglages de l'autre parent."}
           </p>
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-2 text-sm text-danger">{error}</p>}
           <button type="submit" disabled={busy} className={`${button} mt-4`}>
             {busy ? "Un instant…" : mode === "create" ? "Créer le foyer" : "Rejoindre le foyer"}
           </button>

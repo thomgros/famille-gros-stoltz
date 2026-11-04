@@ -105,7 +105,7 @@ function Membres() {
           <p className="text-[15px]">
             Invitez {NAMES[other]} avec ce lien, ou le code <strong className="tracking-widest">{membership.inviteCode}</strong>.
           </p>
-          <button type="button" onClick={() => void share()} className="mt-3 w-full rounded-2xl bg-accent py-3 font-semibold text-on-accent">
+          <button type="button" onClick={() => void share()} className="mt-3 w-full rounded-2xl bg-accent-fill py-3 font-semibold text-on-accent">
             {copied ? "Lien copié" : `Envoyer l'invitation à ${NAMES[other]}`}
           </button>
         </div>

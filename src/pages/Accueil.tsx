@@ -30,7 +30,7 @@ export function Accueil() {
         </Link>
       }
     >
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-transparent bg-hero">
         <Link to="/grossesse" className="flex items-center gap-4">
           <FetusIllustration sa={p.sa} sizeCm={w.sizeCm} className="size-28 shrink-0" />
           <div className="min-w-0">

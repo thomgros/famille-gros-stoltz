@@ -149,12 +149,12 @@ export function RendezVousSheet({ initial, day, onClose, onSave, onDelete }: Pro
                   <button type="button" onClick={() => setConfirmDelete(false)} className="flex-1 py-3 text-[17px] text-accent">
                     Garder
                   </button>
-                  <button type="button" onClick={() => onDelete(initial.id)} className="flex-1 py-3 text-[17px] font-semibold text-[#ff3b30]">
+                  <button type="button" onClick={() => onDelete(initial.id)} className="flex-1 py-3 text-[17px] font-semibold text-danger">
                     Supprimer
                   </button>
                 </div>
               ) : (
-                <button type="button" onClick={() => setConfirmDelete(true)} className="w-full py-3 text-[17px] text-[#ff3b30]">
+                <button type="button" onClick={() => setConfirmDelete(true)} className="w-full py-3 text-[17px] text-danger">
                   Supprimer le rendez-vous
                 </button>
               )}
@@ -190,7 +190,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative h-[31px] w-[51px] rounded-full transition-colors ${checked ? "bg-[#34c759]" : "bg-surface-2 ring-1 ring-line"}`}
+      className={`relative h-[31px] w-[51px] rounded-full transition-colors ${checked ? "bg-success" : "bg-surface-2 ring-1 ring-line"}`}
     >
       <span className={`absolute top-[2px] size-[27px] rounded-full bg-white shadow transition-[left] ${checked ? "left-[22px]" : "left-[2px]"}`} />
     </button>
