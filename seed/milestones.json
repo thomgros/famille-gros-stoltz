@@ -1,0 +1,20 @@
+[
+  { "id": "echo-1", "title": "1re échographie (datation)", "kind": "medical", "date": "2026-12-04", "endDate": "2026-12-25", "description": "Entre 11 et 14 SA. À confirmer avec la sage-femme ou le gynécologue." },
+  { "id": "declaration", "title": "Déclarer la grossesse à la CPAM et à la CAF", "kind": "admin", "date": "2026-12-31", "description": "Avant la fin du 3e mois. Le médecin ou la sage-femme fait la déclaration en ligne." },
+  { "id": "creche-inscription", "title": "Inscription crèche municipale", "kind": "garde", "date": "2027-02-01", "endDate": "2027-02-28", "description": "En personne à la Mairie du 18e, plus les dossiers des crèches associatives et privées." },
+  { "id": "echo-2", "title": "2e échographie (morphologique)", "kind": "medical", "date": "2027-02-05", "endDate": "2027-03-12", "description": "Entre 20 et 25 SA." },
+  { "id": "clim", "title": "Acheter le climatiseur", "kind": "achat", "date": "2027-02-01", "endDate": "2027-04-30", "description": "Avant la hausse des prix du printemps." },
+  { "id": "ass-mat", "title": "Rencontrer 3 à 5 ass mat", "kind": "garde", "date": "2027-03-01", "endDate": "2027-05-31", "description": "Contrat irrégulier, horaires atypiques. Chercher aussi une famille pour une nounou partagée." },
+  { "id": "voyage-usa", "title": "Voyage aux États-Unis", "kind": "voyage", "date": "2027-03-25", "approximate": true, "description": "Fin mars, vers 27 SA. Ne rien y acheter pour bébé (siège auto, lait, cosmétiques : normes différentes)." },
+  { "id": "commandes-avril", "title": "Commander poussette, cosy, cododo", "kind": "achat", "date": "2027-04-01", "endDate": "2027-04-30", "description": "Essayer les adaptateurs cosy en magasin. Essayer les porte-bébés à deux." },
+  { "id": "echo-3", "title": "3e échographie", "kind": "medical", "date": "2027-04-16", "endDate": "2027-05-21", "description": "Entre 30 et 35 SA." },
+  { "id": "textiles", "title": "Textiles, change, toilette", "kind": "achat", "date": "2027-05-01", "endDate": "2027-05-31", "description": "Tout laver 2 à 3 fois, aérer la chambre et le cododo." },
+  { "id": "conge-mat-debut", "title": "Début du congé maternité", "kind": "vie", "relativeTo": { "milestone": "dueDate", "offsetDays": -42 }, "description": "6 semaines avant le terme. Valise de maternité prête, cosy dans l'entrée." },
+  { "id": "terme", "title": "Terme prévu", "kind": "vie", "relativeTo": { "milestone": "dueDate", "offsetDays": 0 }, "description": "À la naissance : confirmer la naissance à chaque crèche et à la mairie, décider des dates de congé de naissance." },
+  { "id": "conge-pat-fin", "title": "Fin du congé paternité", "kind": "vie", "relativeTo": { "milestone": "dueDate", "offsetDays": 28 }, "approximate": true, "description": "25 jours + 3 jours de naissance, comptés depuis la naissance réelle." },
+  { "id": "conge-mat-fin", "title": "Fin du congé maternité", "kind": "vie", "relativeTo": { "milestone": "dueDate", "offsetDays": 70 }, "description": "10 semaines après le terme." },
+  { "id": "entree-garde", "title": "Entrée en garde prévue", "kind": "garde", "date": "2027-09-01", "endDate": "2027-09-30", "description": "Vers 3 mois. Sinon vers 6 mois et demi si les deux prennent leur congé de naissance de 2 mois." },
+  { "id": "lit-enno", "title": "Commander le lit Pinolino Enno + matelas", "kind": "achat", "date": "2027-09-01", "endDate": "2027-10-31", "description": "Aérer 2 à 3 semaines avant usage." },
+  { "id": "passage-lit", "title": "Passage du babybay au lit Enno", "kind": "achat", "date": "2027-12-01", "approximate": true, "description": "Vers 5-6 mois. Chaise haute, vaisselle, sécurité de l'appartement." },
+  { "id": "maternelle", "title": "Entrée en maternelle", "kind": "vie", "date": "2030-09-01", "description": "3 ans et 3 mois." }
+]
