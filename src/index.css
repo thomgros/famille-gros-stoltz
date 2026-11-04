@@ -29,59 +29,7 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #1d1a14;
-    --surface: #27231b;
-    --surface-2: #322d22;
-    --ink: #f4eedd;
-    --muted: #b2a891;
-    --line: #3d372a;
-    --accent: #efd27a;
-    --accent-fill: #e9cc6f;
-    --accent-soft: #3a321b;
-    --on-accent: #2a2414;
-    --today: #f0957c;
-    --success: #6fbf9b;
-    --danger: #ef8a73;
-    --k-medical: #93bde3;
-    --k-admin: #c3b0ec;
-    --k-achat: #f0a88c;
-    --k-vie: #efd27a;
-    --k-garde: #86d0b8;
-    --k-voyage: #7ccbd9;
-    --fetus: #e3a586;
-    --womb: #3d3420;
-    --hero: linear-gradient(160deg, #3a321b 0%, #3a2a24 100%);
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg: #1d1a14;
-  --surface: #27231b;
-  --surface-2: #322d22;
-  --ink: #f4eedd;
-  --muted: #b2a891;
-  --line: #3d372a;
-  --accent: #efd27a;
-  --accent-fill: #e9cc6f;
-  --accent-soft: #3a321b;
-  --on-accent: #2a2414;
-  --today: #f0957c;
-  --success: #6fbf9b;
-  --danger: #ef8a73;
-  --k-medical: #93bde3;
-  --k-admin: #c3b0ec;
-  --k-achat: #f0a88c;
-  --k-vie: #efd27a;
-  --k-garde: #86d0b8;
-  --k-voyage: #7ccbd9;
-  --fetus: #e3a586;
-  --womb: #3d3420;
-  --hero: linear-gradient(160deg, #3a321b 0%, #3a2a24 100%);
-  color-scheme: dark;
-}
+/* Pas de mode sombre : l'app reste toujours en tons clairs, même si l'iPhone est en mode sombre. */
 
 @theme inline {
   --color-bg: var(--bg);
