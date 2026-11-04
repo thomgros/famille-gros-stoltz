@@ -33,6 +33,7 @@ export const SEED_STEPS: SeedStep[] = [
   { version: 4, collections: { tasks, items } },
   // Pas d'employeur (indépendants) : pas de RH.
   { version: 5, removals: { tasks: ["t04-demander-aux-rh-s-il-existe-de"] } },
+  { version: 6, removals: { tasks: ["t33-installer-rideaux-occultants-o"], items: ["i05-rideaux-occultants-ou-film-ant"] } },
 ];
 
 export const LATEST_SEED = Math.max(...SEED_STEPS.map((s) => s.version));
